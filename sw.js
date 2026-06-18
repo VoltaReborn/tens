@@ -1,5 +1,5 @@
 // sw.js — smart cache with instant activation + update-friendly fetch
-const CACHE_VERSION   = 'v6';
+const CACHE_VERSION   = 'v105';
 const STATIC_CACHE    = `tens-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE   = `tens-runtime-${CACHE_VERSION}`;
 
@@ -7,8 +7,6 @@ const RUNTIME_CACHE   = `tens-runtime-${CACHE_VERSION}`;
 const ASSETS = [
   './',
   'index.html',
-  'styles.css',
-  'script.js',
   'manifest.webmanifest',
   'icons/icon-192.png',
   'icons/icon-512.png'
