@@ -3204,38 +3204,33 @@
     .splashOverlay.dismissing {
       pointer-events: none;
       overflow: hidden;
-      animation: splashBackdropClear 640ms cubic-bezier(.18,.78,.16,1) forwards;
+      animation: splashBackdropClear 560ms linear forwards;
     }
 
     .splashOverlay.dismissing .splashCard {
-      animation: splashCardSuckToTab 640ms cubic-bezier(.16,.82,.16,1) forwards;
+      animation: splashCardSuckToTab 560ms cubic-bezier(.33,0,.12,1) forwards;
       transform-origin: center center;
+      will-change: transform, opacity, filter, border-radius;
+      backface-visibility: hidden;
     }
 
     @keyframes splashBackdropClear {
-      0% { background-color: rgba(4, 9, 13, 1); }
-      78% { background-color: rgba(4, 9, 13, .76); }
-      100% { background-color: rgba(4, 9, 13, 0); }
+      from { opacity: 1; }
+      to { opacity: 0; }
     }
 
     @keyframes splashCardSuckToTab {
-      0% {
+      from {
         opacity: 1;
         transform: translate3d(0,0,0) scale(1);
         border-radius: 24px;
         filter: blur(0);
       }
-      55% {
-        opacity: .96;
-        transform: translate3d(calc(var(--splash-dx, 0px) * .52), calc(var(--splash-dy, 0px) * .52), 0) scale(.58);
-        border-radius: 18px;
-        filter: blur(0);
-      }
-      100% {
-        opacity: .08;
+      to {
+        opacity: .12;
         transform: translate3d(var(--splash-dx, 0px), var(--splash-dy, 0px), 0) scale(var(--splash-scale, .06));
         border-radius: 12px;
-        filter: blur(1.4px);
+        filter: blur(.8px);
       }
     }
 
@@ -3251,6 +3246,8 @@
       max-height: calc(100dvh - 24px - var(--safe-top) - var(--safe-bottom));
       overflow-y: auto;
       border-radius: 24px;
+      transform: translateZ(0);
+      backface-visibility: hidden;
       border: 1px solid rgba(255,255,255,0.18);
       background:
         radial-gradient(circle at 50% -12%, rgba(255,255,255,0.15), transparent 31%),
@@ -6259,7 +6256,10 @@
       if (!el.splashOverlay || el.splashOverlay.classList.contains('hidden')) return;
       const overlay = el.splashOverlay;
       const card = overlay.querySelector('.splashCard');
+      let finished = false;
       const finish = () => {
+        if (finished) return;
+        finished = true;
         overlay.classList.add('hidden');
         overlay.classList.remove('dismissing', 'fadeOnly');
         overlay.style.removeProperty('--splash-dx');
@@ -6289,8 +6289,12 @@
       overlay.style.setProperty('--splash-dx', `${Math.round(targetCenterX - cardCenterX)}px`);
       overlay.style.setProperty('--splash-dy', `${Math.round(targetCenterY - cardCenterY)}px`);
       overlay.style.setProperty('--splash-scale', String(scale));
+      const finishFromAnimation = event => {
+        if (event.animationName === 'splashCardSuckToTab') finish();
+      };
+      card.addEventListener('animationend', finishFromAnimation, { once: true });
       overlay.classList.add('dismissing');
-      window.setTimeout(finish, 680);
+      window.setTimeout(finish, 640);
     }
 
     function openSplashDrawerPage(pageId) {
