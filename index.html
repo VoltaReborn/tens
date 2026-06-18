@@ -5056,10 +5056,18 @@
       const incomingIds = uniquePickupIds.filter(id => !currentHandSet.has(id));
       if (!incomingIds.length) return;
 
-      // Do NOT hide or rebuild the whole hand during pickup. That was causing the
-      // player's entire hand to vanish on blind-flip overplays before the final render.
       const finalHandIds = projectedHumanHandIdsAfterPickup(playerId, incomingIds);
-      applyHandLayoutForCount(finalHandIds.length);
+      const incomingSet = new Set(incomingIds);
+      const previousHandRects = new Map();
+      const previousScrollTop = el.handScroller ? el.handScroller.scrollTop : 0;
+
+      currentHandIds.forEach(id => {
+        const node = findCardElements(id).find(n => n.dataset.zone === 'hand');
+        if (node && node.getClientRects().length) {
+          const r = node.getBoundingClientRect();
+          previousHandRects.set(id, { left: r.left, top: r.top, width: r.width, height: r.height });
+        }
+      });
 
       const sources = new Map();
       const sourceNodesToHide = [];
@@ -5078,7 +5086,8 @@
           }
         }
 
-        // Only hide the incoming pile/table cards. Leave existing hand cards visible.
+        // Hide only the incoming pile/table source nodes. Existing hand cards stay visible,
+        // then get reflowed into their final sorted spots while the pickup cards fly in.
         findCardElements(id).forEach(node => {
           if (node.dataset.zone !== 'hand' && !node.classList.contains('clearSourceHidden')) {
             node.classList.add('clearSourceHidden');
@@ -5087,25 +5096,73 @@
         });
       });
 
-      await new Promise(resolve => requestAnimationFrame(resolve));
+      const finalNodeById = new Map();
+      applyHandLayoutForCount(finalHandIds.length);
+      el.handGrid.innerHTML = '';
+      finalHandIds.forEach((id, index) => {
+        const card = game.cardsById[id];
+        if (!card) return;
+        const node = createCard(card, {
+          owner: 'You',
+          zone: 'hand',
+          index,
+          playable: false
+        });
+        if (incomingSet.has(id)) node.classList.add('clearSourceHidden', 'pickupIncomingPlaceholder');
+        el.handGrid.appendChild(node);
+        finalNodeById.set(id, node);
+      });
 
-      const handRect = el.handGrid.getBoundingClientRect();
-      const fallbackRect = el.handPanel.getBoundingClientRect();
-      const cols = finalHandIds.length <= 12 ? 6 : 8;
-      const cardW = parseFloat(getComputedStyle(el.handGrid).getPropertyValue('--hand-card-w')) || Math.max(24, Math.min(42, fallbackRect.width / cols));
-      const cardH = parseFloat(getComputedStyle(el.handGrid).getPropertyValue('--hand-card-h')) || cardW * CARD_RATIO;
-      const gap = 3;
-      const baseLeft = (handRect.width ? handRect.left : fallbackRect.left + 6);
-      const baseTop = (handRect.height ? handRect.top : fallbackRect.top + 6);
+      el.handPanel.classList.toggle('scrollHand', finalHandIds.length > 16);
+      if (el.handScroller) el.handScroller.scrollTop = finalHandIds.length > 16 ? previousScrollTop : 0;
+      el.handScenarioBadge.textContent = `Hand · ${finalHandIds.length} card${finalHandIds.length === 1 ? '' : 's'}`;
+      const turnPlayer = game.roundActive ? game.players[game.turn] : null;
+      const turnText = game.roundActive ? (turnPlayer?.isHuman ? 'Your turn' : `${turnPlayer?.name || 'AI'} turn`) : 'Round over';
+      el.handScrollBadge.textContent = finalHandIds.length > 16 ? `${turnText} · scroll` : turnText;
+
+      layoutAll();
+      await new Promise(resolve => requestAnimationFrame(() => {
+        layoutAll();
+        resolve();
+      }));
+
+      const handReflowAnimations = [];
+      currentHandIds.forEach(id => {
+        const node = finalNodeById.get(id);
+        const from = previousHandRects.get(id);
+        if (!node || !from || !node.getClientRects().length) return;
+        const to = node.getBoundingClientRect();
+        const dx = from.left - to.left;
+        const dy = from.top - to.top;
+        const sx = from.width && to.width ? from.width / to.width : 1;
+        const sy = from.height && to.height ? from.height / to.height : 1;
+        if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5 && Math.abs(sx - 1) < 0.015 && Math.abs(sy - 1) < 0.015) return;
+        node.style.zIndex = '3';
+        const anim = node.animate([
+          { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})` },
+          { transform: 'translate(0, 0) scale(1, 1)' }
+        ], { duration: 360, easing: 'cubic-bezier(.20,.78,.20,1)', fill: 'both' });
+        handReflowAnimations.push(anim.finished.catch(() => {}).finally(() => { node.style.zIndex = ''; }));
+      });
 
       const targetFor = (id, fallbackIndex) => {
+        const targetNode = finalNodeById.get(id);
+        if (targetNode && targetNode.getClientRects().length) {
+          const r = targetNode.getBoundingClientRect();
+          return { left: r.left, top: r.top, width: r.width, height: r.height };
+        }
+        const fallbackRect = el.handPanel.getBoundingClientRect();
+        const cols = finalHandIds.length <= 12 ? 6 : 8;
+        const cardW = parseFloat(getComputedStyle(el.handGrid).getPropertyValue('--hand-card-w')) || Math.max(24, Math.min(42, fallbackRect.width / cols));
+        const cardH = parseFloat(getComputedStyle(el.handGrid).getPropertyValue('--hand-card-h')) || cardW * CARD_RATIO;
+        const gap = 3;
         const finalIndex = Math.max(0, finalHandIds.indexOf(id));
         const visibleIndex = finalIndex >= 0 ? finalIndex : currentHandIds.length + fallbackIndex;
         const col = visibleIndex % cols;
-        const row = Math.min(1, Math.floor(visibleIndex / cols));
+        const row = Math.floor(visibleIndex / cols);
         return {
-          left: baseLeft + col * (cardW + gap),
-          top: baseTop + row * (cardH + gap),
+          left: fallbackRect.left + 6 + col * (cardW + gap),
+          top: fallbackRect.top + 6 + row * (cardH + gap),
           width: cardW,
           height: cardH
         };
@@ -5127,14 +5184,24 @@
             duration: 390 + Math.min(70, incomingIds.length * 6),
             drift: -12 - Math.min(10, incomingIds.length),
             snappyLanding: true
+          }).then(() => {
+            const targetNode = finalNodeById.get(id);
+            if (targetNode) targetNode.classList.remove('clearSourceHidden', 'pickupIncomingPlaceholder');
           });
         });
 
-        await Promise.all(animations);
+        await Promise.all([...animations, ...handReflowAnimations]);
       } finally {
+        incomingIds.forEach(id => {
+          const targetNode = finalNodeById.get(id);
+          if (targetNode) targetNode.classList.remove('clearSourceHidden', 'pickupIncomingPlaceholder');
+        });
+        // Paint the real preview cards before removing the sprites, so the pickup never
+        // has a blank gap between landing and the final hand render.
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
         sprites.forEach(sprite => { if (sprite) sprite.remove(); });
         // Keep incoming source nodes hidden until the caller mutates state and renders.
-        // Existing hand cards were never hidden, so the hand cannot disappear here.
+        // Existing hand cards were preview-rendered in their final slots and never vanish.
       }
     }
 

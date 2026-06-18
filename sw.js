@@ -1,5 +1,5 @@
 // sw.js — smart cache with instant activation + update-friendly fetch
-const CACHE_VERSION   = 'v106';
+const CACHE_VERSION   = 'v107';
 const STATIC_CACHE    = `tens-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE   = `tens-runtime-${CACHE_VERSION}`;
 

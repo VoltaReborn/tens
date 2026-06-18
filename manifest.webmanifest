@@ -25,14 +25,14 @@
       "src": "screenshots/mobile-720x1280.png",
       "sizes": "720x1280",
       "type": "image/png",
-      "label": "Gameplay – mobile"
+      "label": "Gameplay \u2013 mobile"
     },
     {
       "src": "screenshots/wide-1280x720.png",
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Gameplay – desktop"
+      "label": "Gameplay \u2013 desktop"
     }
   ]
 }
