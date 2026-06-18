@@ -3185,17 +3185,66 @@
 
     .splashOverlay.hidden { display: none; }
 
-    .splashOverlay.dismissToDrawer {
+    body.splash-active .drawerTab {
+      opacity: 0;
       pointer-events: none;
-      animation: splashFlyToDrawer 520ms cubic-bezier(.18,.78,.16,1) forwards;
-      transform-origin: right center;
+      transform: translateX(8px) scale(.72);
     }
 
-    @keyframes splashFlyToDrawer {
-      0% { opacity: 1; transform: translate3d(0,0,0) scale(1); filter: blur(0); }
-      62% { opacity: .86; transform: translate3d(18vw, -2vh, 0) scale(.72); filter: blur(0); }
-      100% { opacity: 0; transform: translate3d(calc(50vw - 26px), 11vh, 0) scale(.055); filter: blur(2px); }
+    .drawerTab.tabAppeared {
+      animation: drawerTabAppear 260ms cubic-bezier(.18,.84,.22,1) both;
     }
+
+    @keyframes drawerTabAppear {
+      0% { opacity: 0; transform: translateX(11px) scale(.62); filter: blur(2px); }
+      68% { opacity: 1; transform: translateX(-2px) scale(1.06); filter: blur(0); }
+      100% { opacity: 1; transform: translateX(0) scale(1); filter: blur(0); }
+    }
+
+    .splashOverlay.dismissing {
+      pointer-events: none;
+      overflow: hidden;
+      animation: splashBackdropClear 640ms cubic-bezier(.18,.78,.16,1) forwards;
+    }
+
+    .splashOverlay.dismissing .splashCard {
+      animation: splashCardSuckToTab 640ms cubic-bezier(.16,.82,.16,1) forwards;
+      transform-origin: center center;
+    }
+
+    @keyframes splashBackdropClear {
+      0% { background-color: rgba(4, 9, 13, 1); }
+      78% { background-color: rgba(4, 9, 13, .76); }
+      100% { background-color: rgba(4, 9, 13, 0); }
+    }
+
+    @keyframes splashCardSuckToTab {
+      0% {
+        opacity: 1;
+        transform: translate3d(0,0,0) scale(1);
+        border-radius: 24px;
+        filter: blur(0);
+      }
+      55% {
+        opacity: .96;
+        transform: translate3d(calc(var(--splash-dx, 0px) * .52), calc(var(--splash-dy, 0px) * .52), 0) scale(.58);
+        border-radius: 18px;
+        filter: blur(0);
+      }
+      100% {
+        opacity: .08;
+        transform: translate3d(var(--splash-dx, 0px), var(--splash-dy, 0px), 0) scale(var(--splash-scale, .06));
+        border-radius: 12px;
+        filter: blur(1.4px);
+      }
+    }
+
+    .splashOverlay.fadeOnly {
+      pointer-events: none;
+      animation: splashFadeOut 160ms ease forwards;
+    }
+
+    @keyframes splashFadeOut { to { opacity: 0; } }
 
     .splashCard {
       width: min(94vw, 410px);
@@ -3214,9 +3263,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 13px;
-      text-align: left;
-      padding: 5px 0 12px;
+      text-align: center;
+      padding: 10px 0 18px;
     }
 
     .splashWordmark {
@@ -3226,12 +3274,12 @@
     }
 
     .splashIcon {
-      width: 66px;
-      height: 66px;
-      border-radius: 18px;
+      width: 108px;
+      height: 108px;
+      border-radius: 26px;
       display: block;
       flex: 0 0 auto;
-      box-shadow: 0 10px 26px rgba(0,0,0,0.42), 0 0 0 1px rgba(255,255,255,0.16);
+      box-shadow: 0 15px 38px rgba(0,0,0,0.48), 0 0 0 1px rgba(255,255,255,0.18), 0 0 35px rgba(240,202,104,0.16);
     }
 
     .splashTitle {
@@ -3358,8 +3406,9 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .splashOverlay.dismissToDrawer { animation: splashFadeOut 160ms ease forwards; }
-      @keyframes splashFadeOut { to { opacity: 0; } }
+      .splashOverlay.dismissing .splashCard { animation: none; }
+      .splashOverlay.dismissing { animation: splashFadeOut 160ms ease forwards; }
+      .drawerTab.tabAppeared { animation: none; }
     }
 
     @media (max-height: 690px) {
@@ -3369,7 +3418,7 @@
     }
   </style>
 </head>
-<body class="face-light" data-cardback="classic">
+<body class="face-light splash-active" data-cardback="classic">
   <main class="app" id="app" aria-label="Tens mobile compact board">
     <section class="panel opponentsPanel" aria-label="Opponents">
       <div class="opponentsGrid" id="opponentsGrid"></div>
@@ -3411,11 +3460,7 @@
 
   <div class="splashOverlay" id="splashOverlay" aria-label="Tens home screen">
     <div class="splashCard" role="dialog" aria-label="Tens main menu">
-      <div class="splashHero">
-        <div class="splashWordmark" aria-label="Tens Card Game">
-          <div class="splashTitle">Tens</div>
-          <div class="splashSubtitle">Card Game</div>
-        </div>
+      <div class="splashHero" aria-label="Tens Card Game">
         <img class="splashIcon" src="icons/icon-192.png" alt="Tens app icon" />
       </div>
 
@@ -6212,12 +6257,40 @@
 
     function dismissSplash() {
       if (!el.splashOverlay || el.splashOverlay.classList.contains('hidden')) return;
-      el.splashOverlay.classList.add('dismissToDrawer');
+      const overlay = el.splashOverlay;
+      const card = overlay.querySelector('.splashCard');
+      const finish = () => {
+        overlay.classList.add('hidden');
+        overlay.classList.remove('dismissing', 'fadeOnly');
+        overlay.style.removeProperty('--splash-dx');
+        overlay.style.removeProperty('--splash-dy');
+        overlay.style.removeProperty('--splash-scale');
+        document.body.classList.remove('splash-active');
+        if (el.drawerTab) {
+          el.drawerTab.classList.remove('tabAppeared');
+          void el.drawerTab.offsetWidth;
+          el.drawerTab.classList.add('tabAppeared');
+          window.setTimeout(() => el.drawerTab?.classList.remove('tabAppeared'), 320);
+        }
+      };
       const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      window.setTimeout(() => {
-        el.splashOverlay.classList.add('hidden');
-        el.splashOverlay.classList.remove('dismissToDrawer');
-      }, reduced ? 180 : 540);
+      if (reduced || !card) {
+        overlay.classList.add('fadeOnly');
+        window.setTimeout(finish, 180);
+        return;
+      }
+      const cardRect = card.getBoundingClientRect();
+      const targetRect = el.drawerTab?.getBoundingClientRect();
+      const targetCenterX = targetRect ? targetRect.left + targetRect.width / 2 : window.innerWidth - 12;
+      const targetCenterY = targetRect ? targetRect.top + targetRect.height / 2 : window.innerHeight * .62;
+      const cardCenterX = cardRect.left + cardRect.width / 2;
+      const cardCenterY = cardRect.top + cardRect.height / 2;
+      const scale = targetRect ? Math.max(.045, Math.min(.09, Math.min(targetRect.width / cardRect.width, targetRect.height / cardRect.height) * 1.15)) : .06;
+      overlay.style.setProperty('--splash-dx', `${Math.round(targetCenterX - cardCenterX)}px`);
+      overlay.style.setProperty('--splash-dy', `${Math.round(targetCenterY - cardCenterY)}px`);
+      overlay.style.setProperty('--splash-scale', String(scale));
+      overlay.classList.add('dismissing');
+      window.setTimeout(finish, 680);
     }
 
     function openSplashDrawerPage(pageId) {
