@@ -1715,9 +1715,8 @@
 
     .roundTinyCard.pointCard {
       border-color: rgba(240,202,104,.62);
-      background: rgba(240,202,104,.14);
-      color: #fff1bd;
-      box-shadow: 0 0 10px rgba(240,202,104,.18);
+      background: var(--face-bg);
+      box-shadow: 0 0 10px rgba(240,202,104,.18), inset 0 0 0 1px rgba(240,202,104,.18);
       animation: pointCardGlow 900ms cubic-bezier(.2,.78,.18,1) both;
     }
 
@@ -3165,6 +3164,204 @@
       display: block;
     }
 
+
+
+    /* Splash / app home */
+    .splashOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 4600;
+      display: grid;
+      place-items: center;
+      padding: calc(14px + var(--safe-top)) 12px calc(14px + var(--safe-bottom));
+      background:
+        radial-gradient(circle at 50% -8%, rgba(240,202,104,0.22), transparent 32%),
+        radial-gradient(circle at 20% 110%, rgba(126,225,255,0.14), transparent 38%),
+        linear-gradient(160deg, rgba(4,20,16,0.96), rgba(4,9,13,0.98));
+      color: var(--text);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+
+    .splashOverlay.hidden { display: none; }
+
+    .splashOverlay.dismissToDrawer {
+      pointer-events: none;
+      animation: splashFlyToDrawer 520ms cubic-bezier(.18,.78,.16,1) forwards;
+      transform-origin: right center;
+    }
+
+    @keyframes splashFlyToDrawer {
+      0% { opacity: 1; transform: translate3d(0,0,0) scale(1); filter: blur(0); }
+      62% { opacity: .86; transform: translate3d(18vw, -2vh, 0) scale(.72); filter: blur(0); }
+      100% { opacity: 0; transform: translate3d(calc(50vw - 26px), 11vh, 0) scale(.055); filter: blur(2px); }
+    }
+
+    .splashCard {
+      width: min(94vw, 410px);
+      max-height: calc(100dvh - 24px - var(--safe-top) - var(--safe-bottom));
+      overflow-y: auto;
+      border-radius: 24px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background:
+        radial-gradient(circle at 50% -12%, rgba(255,255,255,0.15), transparent 31%),
+        linear-gradient(180deg, rgba(21,35,43,0.98), rgba(5,10,13,0.985));
+      box-shadow: 0 24px 70px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,255,255,0.09);
+      padding: 15px;
+    }
+
+    .splashHero {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 13px;
+      text-align: left;
+      padding: 5px 0 12px;
+    }
+
+    .splashWordmark {
+      min-width: 0;
+      display: grid;
+      justify-items: end;
+    }
+
+    .splashIcon {
+      width: 66px;
+      height: 66px;
+      border-radius: 18px;
+      display: block;
+      flex: 0 0 auto;
+      box-shadow: 0 10px 26px rgba(0,0,0,0.42), 0 0 0 1px rgba(255,255,255,0.16);
+    }
+
+    .splashTitle {
+      font-size: clamp(2.1rem, 10vw, 3.25rem);
+      line-height: .9;
+      font-weight: 1000;
+      letter-spacing: -0.08em;
+      color: #fff8dc;
+      text-shadow: 0 2px 0 rgba(0,0,0,0.45), 0 0 28px rgba(240,202,104,0.32);
+      white-space: nowrap;
+    }
+
+    .splashSubtitle {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: .78rem;
+      font-weight: 1000;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .splashActions, .splashMenuGrid { display: grid; gap: 8px; }
+    .splashActions { margin-bottom: 10px; }
+    .splashMenuGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 10px; }
+
+    .splashBtn {
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 15px;
+      min-height: 46px;
+      padding: 10px 11px;
+      background: rgba(255,255,255,0.075);
+      color: #fff;
+      font-weight: 1000;
+      text-align: left;
+      cursor: pointer;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.055), 0 5px 16px rgba(0,0,0,0.22);
+    }
+
+    .splashBtn.hidden { display: none; }
+
+    .splashBtn small {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: .66rem;
+      font-weight: 900;
+      line-height: 1.12;
+    }
+
+    .splashBtn.primary {
+      min-height: 56px;
+      color: #171100;
+      background: linear-gradient(180deg, rgba(240,202,104,1), rgba(240,202,104,0.78));
+      border-color: rgba(255,255,255,0.44);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.32), 0 0 0 2px rgba(240,202,104,0.12);
+    }
+
+    .splashBtn.primary small { color: rgba(23,17,0,0.72); }
+
+    .splashSetup {
+      display: grid;
+      gap: 8px;
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.055);
+      padding: 10px;
+      margin: 9px 0;
+    }
+
+    .splashSetupTitle {
+      color: var(--gold);
+      font-size: .75rem;
+      font-weight: 1000;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+
+    .splashControlRow { display: grid; gap: 5px; }
+
+    .splashControlRow label, .setupLabel {
+      color: #f7fbff;
+      font-size: .76rem;
+      font-weight: 1000;
+    }
+
+    .splashControlRow select, .setupSelect {
+      width: 100%;
+      min-height: 36px;
+      border-radius: 11px;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: #111a20;
+      color: #fff;
+      padding: 5px 9px;
+      font-weight: 900;
+    }
+
+    .difficultyChips {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .difficultyChips .difficultyItem {
+      min-height: 34px;
+      padding: 7px 8px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+    }
+
+    .difficultyChips .difficultyItem strong { font-size: .74rem; line-height: 1; }
+    .difficultyChips .difficultyItem p { display: none; }
+    .hiddenSetupSelect { display: none !important; }
+
+    .setupGroup {
+      display: grid;
+      gap: 8px;
+      margin-top: 8px;
+      padding: 9px;
+      border-radius: 13px;
+      border: 1px solid rgba(255,255,255,0.11);
+      background: rgba(255,255,255,0.045);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .splashOverlay.dismissToDrawer { animation: splashFadeOut 160ms ease forwards; }
+      @keyframes splashFadeOut { to { opacity: 0; } }
+    }
+
     @media (max-height: 690px) {
       .app { grid-template-rows: 26fr 31fr 12fr 31fr; }
       .opponent { grid-template-rows: 13px minmax(0, 1fr); grid-template-columns: 18px minmax(0, 1fr) 18px; }
@@ -3212,6 +3409,30 @@
     </section>
   </main>
 
+  <div class="splashOverlay" id="splashOverlay" aria-label="Tens home screen">
+    <div class="splashCard" role="dialog" aria-label="Tens main menu">
+      <div class="splashHero">
+        <div class="splashWordmark" aria-label="Tens Card Game">
+          <div class="splashTitle">Tens</div>
+          <div class="splashSubtitle">Card Game</div>
+        </div>
+        <img class="splashIcon" src="icons/icon-192.png" alt="Tens app icon" />
+      </div>
+
+      <div class="splashActions">
+        <button class="splashBtn primary" id="splashStartBtn" type="button">Start New Game<small>choose setup and deal fresh cards</small></button>
+        <button class="splashBtn" id="splashContinueBtn" type="button">Continue Game<small>resume your saved game</small></button>
+        <button class="splashBtn" id="splashRulesBtn" type="button">Rules<small>how rounds, scoring, and winning work</small></button>
+      </div>
+
+      <div class="splashMenuGrid" aria-label="More options">
+        <button class="splashBtn" data-splash-page="settingsPage" type="button">Settings<small>appearance + gameplay</small></button>
+        <button class="splashBtn" data-splash-page="playersPage" type="button">AI Difficulty<small>change AI behavior</small></button>
+      </div>
+    </div>
+  </div>
+
+
   <aside class="drawer" id="drawer" aria-label="Options drawer">
     <button class="drawerTab" id="drawerTab" aria-label="Open options drawer"><span>‹</span></button>
     <div class="drawerBody">
@@ -3228,7 +3449,7 @@
             <button class="drawerMenuBtn" data-page="hintPage">Hint <small>strategy help</small></button>
             <button class="drawerMenuBtn" data-page="logPage" type="button">Log <small>game history</small></button>
             <button class="drawerMenuBtn" data-page="settingsPage">Settings <small>appearance + gameplay</small></button>
-            <button class="drawerMenuBtn" data-page="playersPage">Players &amp; Difficulty <small>opponents + difficulty</small></button>
+            <button class="drawerMenuBtn" data-page="playersPage">AI Difficulty <small>change AI behavior</small></button>
             <button class="drawerMenuBtn" id="startNewGameMenuBtn" type="button">Start New Game <small>deal fresh cards</small></button>
             <button class="drawerMenuBtn" data-page="rulesPage">Rules <small>how to play</small></button>
           </nav>
@@ -3420,22 +3641,16 @@
         </section>
 
         <section class="subpage" id="playersPage">
-          <div class="subTop"><button class="backBtn" data-back>‹</button><div class="subTitle">Players &amp; Difficulty</div></div>
-          <div class="sectionBox">
-            <h3>Players</h3>
-            <div class="controlRow">
-              <label for="aiCount">Players</label>
-              <select id="aiCount">
-                <option value="1">You + 1 AI</option>
-                <option value="2">You + 2 AI</option>
-                <option value="3">You + 3 AI</option>
-                <option value="4" selected>You + 4 AI</option>
-              </select>
-            </div>
-          </div>
+          <div class="subTop"><button class="backBtn" data-back>‹</button><div class="subTitle">AI Difficulty</div></div>
+          <select id="aiCount" class="hiddenSetupSelect" aria-hidden="true" tabindex="-1">
+            <option value="1">1 AI Player</option>
+            <option value="2">2 AI Players</option>
+            <option value="3">3 AI Players</option>
+            <option value="4" selected>4 AI Players</option>
+          </select>
           <div class="sectionBox">
             <h3>AI Difficulty</h3>
-            <p class="smallHelp">Tap a difficulty to use it.</p>
+            <p class="smallHelp">Tap a difficulty to change how AI players choose future moves. This takes effect immediately.</p>
             <select id="difficultySelect" style="display:none" aria-hidden="true">
               <option>Easy</option>
               <option>Medium</option>
@@ -3452,7 +3667,7 @@
           <div class="subTop"><button class="backBtn" data-back>‹</button><div class="subTitle">Start New Game</div></div>
           <div class="sectionBox">
             <h3>Deal a fresh game</h3>
-            <p>Starting a new game will discard the current match and deal fresh cards. Player count and AI difficulty come from the Players &amp; Difficulty page.</p>
+            <p>Starting a new game opens the setup box so you can confirm AI players and difficulty before dealing fresh cards.</p>
             <button class="logBtn" id="mockStartBtn">Start New Game</button>
             <p class="smallHelp" id="startPreviewText">Ready to deal.</p>
           </div>
@@ -3465,7 +3680,12 @@
         <section class="subpage" id="rulesPage">
           <div class="subTop"><button class="backBtn" data-back>‹</button><div class="subTitle">Rules</div></div>
           <div class="sectionBox rulesText">
-            <h4>Goal</h4>
+            <h4>How to win the game</h4>
+            <p>Tens is played across multiple rounds. Each round ends when one player gets rid of every card. The other players score points for the cards they still have, and lower score is better.</p>
+            <p>The full game ends as soon as any player reaches 150 or more total points. When that happens, the player with the lowest total score wins the game.</p>
+            <h4>Card scoring</h4>
+            <p>Aces are worth 1 point. Number cards 2 through 9 are worth their number. Jacks, Queens, and Kings are worth 10 points. Tens are special and are worth 30 points each, so getting stuck with a 10 hurts.</p>
+            <h4>Round goal</h4>
             <p>Try to be the first player to get rid of every card: your hand cards, your face-up table cards, and finally your face-down table cards.</p>
             <h4>Taking a turn</h4>
             <p>On your turn, play a card that is the same value as or lower than the live pile card. If the pile is empty, you can play anything.</p>
@@ -3478,26 +3698,35 @@
             <p>If you play a card that is higher than the live pile card, that is an overplay. You must pick up the pile, including the card or cards you just overplayed, and then you immediately make another play.</p>
             <h4>Face-down flips</h4>
             <p>When you flip a face-down card, it must be played. If it matches other visible cards you have, it can be combined with them the same way any normal play can.</p>
-            <h4>Scoring</h4>
-            <p>When someone goes out, everyone else scores points for the cards they still have. Lower score is better.</p>
           </div>
         </section>
       </div>
     </div>
   </aside>
 
-  <div class="modalOverlay" id="newGameConfirmModal" aria-modal="true" role="dialog" aria-label="Start new game confirmation">
+  <div class="modalOverlay" id="newGameConfirmModal" aria-modal="true" role="dialog" aria-label="Start new game setup">
     <div class="choicePanel confirmPanel">
       <div class="modalHead">
-        <strong>Start new game?</strong>
+        <strong>Start new game</strong>
         <button class="closeDrawer" id="newGameCancelX" aria-label="Cancel new game">×</button>
       </div>
       <div class="choiceBody">
-        <p class="smallHelp" style="margin:0;color:#d9e5ea">This will discard the current game and deal fresh cards.</p>
+        <p class="smallHelp" style="margin:0;color:#d9e5ea">Confirm your setup. Starting will discard the current saved game and deal fresh cards.</p>
+        <div class="setupGroup">
+          <label class="setupLabel" for="newGameAiCount">AI Players</label>
+          <select class="setupSelect" id="newGameAiCount">
+            <option value="1">1 AI Player</option>
+            <option value="2">2 AI Players</option>
+            <option value="3">3 AI Players</option>
+            <option value="4" selected>4 AI Players</option>
+          </select>
+          <div class="setupLabel">AI Difficulty</div>
+          <div class="difficultyChips" id="newGameDifficultyList"></div>
+        </div>
       </div>
       <div class="choiceActions">
         <button id="newGameCancelBtn" type="button">Cancel</button>
-        <button class="primaryChoice" id="newGameConfirmBtn" type="button">Start New Game</button>
+        <button class="primaryChoice" id="newGameConfirmBtn" type="button">Confirm &amp; Start</button>
       </div>
     </div>
   </div>
@@ -3624,6 +3853,14 @@
     }
 
     const el = {
+      splashOverlay: document.getElementById('splashOverlay'),
+      splashStartBtn: document.getElementById('splashStartBtn'),
+      splashContinueBtn: document.getElementById('splashContinueBtn'),
+      splashRulesBtn: document.getElementById('splashRulesBtn'),
+      splashAiCount: document.getElementById('splashAiCount'),
+      splashDifficultyList: document.getElementById('splashDifficultyList'),
+      newGameAiCount: document.getElementById('newGameAiCount'),
+      newGameDifficultyList: document.getElementById('newGameDifficultyList'),
       opponentsGrid: document.getElementById('opponentsGrid'),
       pileLayout: document.getElementById('pileLayout'),
       pileGridLeft: document.getElementById('pileGridLeft'),
@@ -5056,18 +5293,10 @@
       const incomingIds = uniquePickupIds.filter(id => !currentHandSet.has(id));
       if (!incomingIds.length) return;
 
+      // Do NOT hide or rebuild the whole hand during pickup. That was causing the
+      // player's entire hand to vanish on blind-flip overplays before the final render.
       const finalHandIds = projectedHumanHandIdsAfterPickup(playerId, incomingIds);
-      const incomingSet = new Set(incomingIds);
-      const previousHandRects = new Map();
-      const previousScrollTop = el.handScroller ? el.handScroller.scrollTop : 0;
-
-      currentHandIds.forEach(id => {
-        const node = findCardElements(id).find(n => n.dataset.zone === 'hand');
-        if (node && node.getClientRects().length) {
-          const r = node.getBoundingClientRect();
-          previousHandRects.set(id, { left: r.left, top: r.top, width: r.width, height: r.height });
-        }
-      });
+      applyHandLayoutForCount(finalHandIds.length);
 
       const sources = new Map();
       const sourceNodesToHide = [];
@@ -5086,8 +5315,7 @@
           }
         }
 
-        // Hide only the incoming pile/table source nodes. Existing hand cards stay visible,
-        // then get reflowed into their final sorted spots while the pickup cards fly in.
+        // Only hide the incoming pile/table cards. Leave existing hand cards visible.
         findCardElements(id).forEach(node => {
           if (node.dataset.zone !== 'hand' && !node.classList.contains('clearSourceHidden')) {
             node.classList.add('clearSourceHidden');
@@ -5096,73 +5324,25 @@
         });
       });
 
-      const finalNodeById = new Map();
-      applyHandLayoutForCount(finalHandIds.length);
-      el.handGrid.innerHTML = '';
-      finalHandIds.forEach((id, index) => {
-        const card = game.cardsById[id];
-        if (!card) return;
-        const node = createCard(card, {
-          owner: 'You',
-          zone: 'hand',
-          index,
-          playable: false
-        });
-        if (incomingSet.has(id)) node.classList.add('clearSourceHidden', 'pickupIncomingPlaceholder');
-        el.handGrid.appendChild(node);
-        finalNodeById.set(id, node);
-      });
+      await new Promise(resolve => requestAnimationFrame(resolve));
 
-      el.handPanel.classList.toggle('scrollHand', finalHandIds.length > 16);
-      if (el.handScroller) el.handScroller.scrollTop = finalHandIds.length > 16 ? previousScrollTop : 0;
-      el.handScenarioBadge.textContent = `Hand · ${finalHandIds.length} card${finalHandIds.length === 1 ? '' : 's'}`;
-      const turnPlayer = game.roundActive ? game.players[game.turn] : null;
-      const turnText = game.roundActive ? (turnPlayer?.isHuman ? 'Your turn' : `${turnPlayer?.name || 'AI'} turn`) : 'Round over';
-      el.handScrollBadge.textContent = finalHandIds.length > 16 ? `${turnText} · scroll` : turnText;
-
-      layoutAll();
-      await new Promise(resolve => requestAnimationFrame(() => {
-        layoutAll();
-        resolve();
-      }));
-
-      const handReflowAnimations = [];
-      currentHandIds.forEach(id => {
-        const node = finalNodeById.get(id);
-        const from = previousHandRects.get(id);
-        if (!node || !from || !node.getClientRects().length) return;
-        const to = node.getBoundingClientRect();
-        const dx = from.left - to.left;
-        const dy = from.top - to.top;
-        const sx = from.width && to.width ? from.width / to.width : 1;
-        const sy = from.height && to.height ? from.height / to.height : 1;
-        if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5 && Math.abs(sx - 1) < 0.015 && Math.abs(sy - 1) < 0.015) return;
-        node.style.zIndex = '3';
-        const anim = node.animate([
-          { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})` },
-          { transform: 'translate(0, 0) scale(1, 1)' }
-        ], { duration: 360, easing: 'cubic-bezier(.20,.78,.20,1)', fill: 'both' });
-        handReflowAnimations.push(anim.finished.catch(() => {}).finally(() => { node.style.zIndex = ''; }));
-      });
+      const handRect = el.handGrid.getBoundingClientRect();
+      const fallbackRect = el.handPanel.getBoundingClientRect();
+      const cols = finalHandIds.length <= 12 ? 6 : 8;
+      const cardW = parseFloat(getComputedStyle(el.handGrid).getPropertyValue('--hand-card-w')) || Math.max(24, Math.min(42, fallbackRect.width / cols));
+      const cardH = parseFloat(getComputedStyle(el.handGrid).getPropertyValue('--hand-card-h')) || cardW * CARD_RATIO;
+      const gap = 3;
+      const baseLeft = (handRect.width ? handRect.left : fallbackRect.left + 6);
+      const baseTop = (handRect.height ? handRect.top : fallbackRect.top + 6);
 
       const targetFor = (id, fallbackIndex) => {
-        const targetNode = finalNodeById.get(id);
-        if (targetNode && targetNode.getClientRects().length) {
-          const r = targetNode.getBoundingClientRect();
-          return { left: r.left, top: r.top, width: r.width, height: r.height };
-        }
-        const fallbackRect = el.handPanel.getBoundingClientRect();
-        const cols = finalHandIds.length <= 12 ? 6 : 8;
-        const cardW = parseFloat(getComputedStyle(el.handGrid).getPropertyValue('--hand-card-w')) || Math.max(24, Math.min(42, fallbackRect.width / cols));
-        const cardH = parseFloat(getComputedStyle(el.handGrid).getPropertyValue('--hand-card-h')) || cardW * CARD_RATIO;
-        const gap = 3;
         const finalIndex = Math.max(0, finalHandIds.indexOf(id));
         const visibleIndex = finalIndex >= 0 ? finalIndex : currentHandIds.length + fallbackIndex;
         const col = visibleIndex % cols;
-        const row = Math.floor(visibleIndex / cols);
+        const row = Math.min(1, Math.floor(visibleIndex / cols));
         return {
-          left: fallbackRect.left + 6 + col * (cardW + gap),
-          top: fallbackRect.top + 6 + row * (cardH + gap),
+          left: baseLeft + col * (cardW + gap),
+          top: baseTop + row * (cardH + gap),
           width: cardW,
           height: cardH
         };
@@ -5184,24 +5364,14 @@
             duration: 390 + Math.min(70, incomingIds.length * 6),
             drift: -12 - Math.min(10, incomingIds.length),
             snappyLanding: true
-          }).then(() => {
-            const targetNode = finalNodeById.get(id);
-            if (targetNode) targetNode.classList.remove('clearSourceHidden', 'pickupIncomingPlaceholder');
           });
         });
 
-        await Promise.all([...animations, ...handReflowAnimations]);
+        await Promise.all(animations);
       } finally {
-        incomingIds.forEach(id => {
-          const targetNode = finalNodeById.get(id);
-          if (targetNode) targetNode.classList.remove('clearSourceHidden', 'pickupIncomingPlaceholder');
-        });
-        // Paint the real preview cards before removing the sprites, so the pickup never
-        // has a blank gap between landing and the final hand render.
-        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
         sprites.forEach(sprite => { if (sprite) sprite.remove(); });
         // Keep incoming source nodes hidden until the caller mutates state and renders.
-        // Existing hand cards were preview-rendered in their final slots and never vanish.
+        // Existing hand cards were never hidden, so the hand cannot disappear here.
       }
     }
 
@@ -6014,10 +6184,84 @@
       el.pileDensityBadge.textContent = `${active} · ${game.pile.length} pile · ${turn}`;
     }
 
-    function renderDifficultyDescriptions() {
-      el.difficultyList.innerHTML = Object.entries(difficultyDescriptions).map(([name, copy]) => (
-        `<button type="button" class="difficultyItem ${name === state.difficulty ? 'active' : ''}" data-difficulty-name="${name}"><strong>${name}</strong><p>${copy}</p></button>`
+
+    function validAiCount(value) {
+      return Math.max(1, Math.min(4, Number(value) || 4));
+    }
+
+    function setAiCountForNextGame(value) {
+      state.aiCount = validAiCount(value);
+      if (el.aiCount) el.aiCount.value = String(state.aiCount);
+      if (el.splashAiCount) el.splashAiCount.value = String(state.aiCount);
+    }
+
+    function hasContinuableGameProgress() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(GAME_KEY) || 'null');
+        return !!(saved && saved.schema === 1 && Array.isArray(saved.players) && saved.players.length && saved.cardsById && !saved.matchOver);
+      } catch (err) {
+        return false;
+      }
+    }
+
+    function refreshSplashHome() {
+      if (el.splashContinueBtn) el.splashContinueBtn.classList.toggle('hidden', !hasContinuableGameProgress());
+      if (el.splashAiCount) el.splashAiCount.value = String(validAiCount(state.aiCount));
+      renderDifficultyDescriptions();
+    }
+
+    function dismissSplash() {
+      if (!el.splashOverlay || el.splashOverlay.classList.contains('hidden')) return;
+      el.splashOverlay.classList.add('dismissToDrawer');
+      const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      window.setTimeout(() => {
+        el.splashOverlay.classList.add('hidden');
+        el.splashOverlay.classList.remove('dismissToDrawer');
+      }, reduced ? 180 : 540);
+    }
+
+    function openSplashDrawerPage(pageId) {
+      if (el.drawer) el.drawer.classList.add('open');
+      showPage(pageId);
+    }
+
+    function continueSavedGame() {
+      if (!hasContinuableGameProgress()) {
+        refreshSplashHome();
+        return;
+      }
+      if (restoreGameProgress()) {
+        dismissSplash();
+      } else {
+        refreshSplashHome();
+        toast('Could not continue saved game.');
+      }
+    }
+
+    function renderDifficultyButtonList(container, { compact = false, active = state.difficulty } = {}) {
+      if (!container) return;
+      container.innerHTML = Object.entries(difficultyDescriptions).map(([name, copy]) => (
+        `<button type="button" class="difficultyItem ${name === active ? 'active' : ''}${compact ? ' compact' : ''}" data-difficulty-name="${escapeHtml(name)}"><strong>${escapeHtml(name)}</strong>${compact ? '' : `<p>${escapeHtml(copy)}</p>`}</button>`
       )).join('');
+    }
+
+    function renderNewGameDifficultyList(active = state.difficulty) {
+      if (!el.newGameDifficultyList) return;
+      el.newGameDifficultyList.dataset.selectedDifficulty = active;
+      renderDifficultyButtonList(el.newGameDifficultyList, { compact: true, active });
+    }
+
+    function syncNewGameSetupControls() {
+      const aiCount = validAiCount(state.aiCount);
+      if (el.newGameAiCount) el.newGameAiCount.value = String(aiCount);
+      renderNewGameDifficultyList(state.difficulty);
+    }
+
+    function renderDifficultyDescriptions() {
+      renderDifficultyButtonList(el.difficultyList, { compact: false, active: state.difficulty });
+      renderDifficultyButtonList(el.splashDifficultyList, { compact: true, active: state.difficulty });
+      const pendingDifficulty = el.newGameDifficultyList?.dataset.selectedDifficulty || state.difficulty;
+      renderNewGameDifficultyList(pendingDifficulty);
     }
 
     function renderAll() {
@@ -7837,6 +8081,7 @@
     }
 
     function openNewGameConfirm() {
+      syncNewGameSetupControls();
       if (el.newGameConfirmModal) el.newGameConfirmModal.classList.add('open');
     }
 
@@ -7845,11 +8090,20 @@
     }
 
     function confirmStartNewGame() {
+      const nextAiCount = validAiCount(el.newGameAiCount ? el.newGameAiCount.value : state.aiCount);
+      const nextDifficulty = el.newGameDifficultyList?.dataset.selectedDifficulty || state.difficulty;
+      setAiCountForNextGame(nextAiCount);
+      if (difficultyDescriptions[nextDifficulty]) {
+        state.difficulty = nextDifficulty;
+        if (el.difficultySelect) el.difficultySelect.value = state.difficulty;
+      }
+      savePrefs();
       closeNewGameConfirm();
-      el.drawer.classList.remove('open');
+      if (el.drawer) el.drawer.classList.remove('open');
       showHome();
       try { localStorage.removeItem(GAME_KEY); } catch (err) {}
       startNewGame();
+      dismissSplash();
     }
 
     function activateSettingsTab(tabName) {
@@ -8102,6 +8356,11 @@
       on(el.closeDrawer, 'click', () => el.drawer?.classList.remove('open'));
       document.querySelectorAll('[data-page]').forEach(btn => btn.addEventListener('click', () => showPage(btn.dataset.page)));
       if (el.startNewGameMenuBtn) el.startNewGameMenuBtn.addEventListener('click', openNewGameConfirm);
+      if (el.splashStartBtn) el.splashStartBtn.addEventListener('click', openNewGameConfirm);
+      if (el.splashContinueBtn) el.splashContinueBtn.addEventListener('click', continueSavedGame);
+      if (el.splashRulesBtn) el.splashRulesBtn.addEventListener('click', () => openSplashDrawerPage('rulesPage'));
+      document.querySelectorAll('[data-splash-page]').forEach(btn => btn.addEventListener('click', () => openSplashDrawerPage(btn.dataset.splashPage)));
+      if (el.splashAiCount) el.splashAiCount.addEventListener('change', event => setAiCountForNextGame(event.target.value));
       if (el.newGameCancelBtn) el.newGameCancelBtn.addEventListener('click', closeNewGameConfirm);
       if (el.newGameCancelX) el.newGameCancelX.addEventListener('click', closeNewGameConfirm);
       if (el.newGameConfirmBtn) el.newGameConfirmBtn.addEventListener('click', confirmStartNewGame);
@@ -8144,7 +8403,7 @@
         });
       });
 
-      on(el.aiCount, 'change', event => { state.aiCount = Number(event.target.value); renderAll(); });
+      on(el.aiCount, 'change', event => { setAiCountForNextGame(event.target.value); });
       on(el.difficultySelect, 'change', event => { state.difficulty = event.target.value; savePrefs(); renderDifficultyDescriptions(); });
       if (el.clearAnimation) el.clearAnimation.addEventListener('change', savePrefs);
       const openLog = document.getElementById('openLog');
@@ -8173,13 +8432,19 @@
         el.drawer.classList.add('open');
         showPage('hintPage');
       });
-      if (el.difficultyList) el.difficultyList.addEventListener('click', event => {
-        const item = event.target.closest('[data-difficulty-name]');
-        if (!item) return;
+      const applyDifficultyFromItem = item => {
+        if (!item || !difficultyDescriptions[item.dataset.difficultyName]) return;
         state.difficulty = item.dataset.difficultyName;
         if (el.difficultySelect) el.difficultySelect.value = state.difficulty;
         savePrefs();
         renderDifficultyDescriptions();
+      };
+      if (el.difficultyList) el.difficultyList.addEventListener('click', event => applyDifficultyFromItem(event.target.closest('[data-difficulty-name]')));
+      if (el.splashDifficultyList) el.splashDifficultyList.addEventListener('click', event => applyDifficultyFromItem(event.target.closest('[data-difficulty-name]')));
+      if (el.newGameDifficultyList) el.newGameDifficultyList.addEventListener('click', event => {
+        const item = event.target.closest('[data-difficulty-name]');
+        if (!item || !difficultyDescriptions[item.dataset.difficultyName]) return;
+        renderNewGameDifficultyList(item.dataset.difficultyName);
       });
       on(document.getElementById('closeLog'), 'click', () => el.logModal?.classList.remove('open'));
       on(el.logModal, 'click', event => { if (event.target === el.logModal) el.logModal.classList.remove('open'); });
@@ -8204,7 +8469,9 @@
     loadTrainerMemory();
     bindEvents();
     setFace('light');
-    if (!restoreGameProgress()) startNewGame();
+    setAiCountForNextGame(state.aiCount);
+    renderDifficultyDescriptions();
+    refreshSplashHome();
 
     // PWA: load the manifest/service worker only on supported protocols.
     const pwaCanLoadManifest = location.protocol === 'https:' || location.protocol === 'http:';
