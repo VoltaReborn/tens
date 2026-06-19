@@ -2218,6 +2218,23 @@
       visibility: hidden !important;
     }
 
+    .pickupPreviewCard {
+      pointer-events: none !important;
+    }
+
+    .pickupIncomingHidden {
+      visibility: hidden !important;
+    }
+
+    .pickupJustLanded {
+      animation: pickupCardSettle 170ms cubic-bezier(.18,.84,.22,1) both;
+    }
+
+    @keyframes pickupCardSettle {
+      0% { transform: translateY(-1px) scale(1.025); filter: brightness(1.12); }
+      100% { transform: translateY(0) scale(1); filter: brightness(1); }
+    }
+
     .blindRevealStage {
       display: grid;
       place-items: center;
@@ -3204,8 +3221,9 @@
     .splashOverlay.dismissing {
       pointer-events: none;
       overflow: hidden;
-      animation: splashPageSuckToTab 680ms cubic-bezier(.18,.72,.08,1) forwards;
-      will-change: clip-path;
+      background: transparent;
+      perspective: 920px;
+      perspective-origin: 50% 50%;
     }
 
     .splashOverlay::before,
@@ -3217,191 +3235,66 @@
     }
 
     .splashOverlay.dismissing::before {
-      z-index: 1;
-      right: calc(var(--board-side-gap) - 26px);
-      top: calc(var(--splash-target-y, 62vh) - 102px);
-      width: 176px;
-      height: 204px;
-      border-radius: 999px 0 0 999px;
-      background:
-        radial-gradient(ellipse at 100% 50%, rgba(240,202,104,0.62), rgba(126,225,255,0.26) 38%, transparent 72%),
-        linear-gradient(90deg, transparent, rgba(240,202,104,0.18));
-      filter: blur(5px);
-      animation: splashVortexGlow 680ms cubic-bezier(.18,.72,.08,1) forwards;
-    }
-
-    .splashOverlay.dismissing::after {
-      z-index: 1;
-      right: calc(var(--board-side-gap) + 2px);
-      top: calc(var(--splash-target-y, 62vh) - 64px);
-      width: min(62vw, 300px);
-      height: 128px;
-      border-radius: 999px 0 0 999px;
-      background:
-        linear-gradient(90deg, transparent 0%, rgba(126,225,255,0.00) 20%, rgba(126,225,255,0.22) 48%, rgba(240,202,104,0.44) 100%),
-        repeating-linear-gradient(92deg, transparent 0 18px, rgba(255,255,255,0.18) 19px 22px, transparent 23px 43px);
-      filter: blur(.15px);
-      transform-origin: right center;
-      animation: splashSuctionStreak 680ms cubic-bezier(.18,.72,.08,1) forwards;
-      mix-blend-mode: screen;
+      inset: 0;
+      z-index: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(240,202,104,0.10), transparent 36%);
+      animation: splashCardTurnBackdrop 520ms cubic-bezier(.20,.72,.18,1) forwards;
     }
 
     .splashOverlay.dismissing .splashCard {
-      animation: splashCardSuckToTab 680ms cubic-bezier(.18,.72,.08,1) forwards;
-      transform-origin: right center;
-      overflow: hidden;
-      will-change: transform, filter, border-radius, box-shadow;
+      animation: splashCardTwistOut 520ms cubic-bezier(.20,.72,.18,1) forwards;
+      transform-origin: 50% 50%;
+      transform-style: preserve-3d;
+      will-change: transform, box-shadow;
       backface-visibility: hidden;
+      overflow: hidden;
     }
 
     .splashOverlay.dismissing .splashCard::before,
     .splashOverlay.dismissing .splashCard::after {
-      content: "";
-      position: absolute;
-      inset: -2px;
-      pointer-events: none;
-      border-radius: inherit;
-      z-index: 4;
-    }
-
-    .splashOverlay.dismissing .splashCard::before {
-      background:
-        linear-gradient(90deg, transparent 0 52%, rgba(126,225,255,0.18) 72%, rgba(240,202,104,0.72) 96%),
-        radial-gradient(ellipse at 100% 50%, rgba(255,241,188,0.74), transparent 48%);
-      mix-blend-mode: screen;
-      animation: splashEdgeGlow 680ms cubic-bezier(.18,.72,.08,1) forwards;
-    }
-
-    .splashOverlay.dismissing .splashCard::after {
-      border: 2px solid rgba(240,202,104,0.36);
-      box-shadow:
-        inset -18px 0 34px rgba(240,202,104,0.22),
-        0 0 28px rgba(126,225,255,0.16),
-        0 0 48px rgba(240,202,104,0.11);
-      clip-path: inset(0 0 0 58% round 22px);
-      animation: splashRimPull 680ms cubic-bezier(.18,.72,.08,1) forwards;
+      animation: none;
     }
 
     .splashOverlay.dismissing .splashIcon {
-      transform-origin: 82% 50%;
-      animation: splashIconSucked 680ms cubic-bezier(.18,.72,.08,1) forwards;
-      will-change: transform, filter;
+      animation: splashIconCardTurn 520ms cubic-bezier(.20,.72,.18,1) forwards;
+      transform-origin: 50% 50%;
+      will-change: transform;
     }
 
-    @keyframes splashPageSuckToTab {
+    @keyframes splashCardTwistOut {
       0% {
-        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-      }
-      42% {
-        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-      }
-      72% {
-        clip-path: polygon(
-          18% 0,
-          100% calc(var(--splash-target-y, 62vh) - 58px),
-          100% calc(var(--splash-target-y, 62vh) + 58px),
-          18% 100%
-        );
-      }
-      88% {
-        clip-path: polygon(
-          72% calc(var(--splash-target-y, 62vh) - 92px),
-          100% calc(var(--splash-target-y, 62vh) - 31px),
-          100% calc(var(--splash-target-y, 62vh) + 31px),
-          72% calc(var(--splash-target-y, 62vh) + 92px)
-        );
-      }
-      100% {
-        clip-path: polygon(
-          100% calc(var(--splash-target-y, 62vh) - 1px),
-          100% calc(var(--splash-target-y, 62vh) - 1px),
-          100% calc(var(--splash-target-y, 62vh) + 1px),
-          100% calc(var(--splash-target-y, 62vh) + 1px)
-        );
-      }
-    }
-
-    @keyframes splashCardSuckToTab {
-      0% {
-        transform: translate3d(0,0,0) scaleX(1) scaleY(1) skewX(0deg) skewY(0deg);
-        border-radius: 24px;
-        filter: none;
+        transform: rotateY(0deg) scale(1) translateZ(0);
         box-shadow: 0 24px 70px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,255,255,0.09);
       }
-      18% {
-        transform: translate3d(var(--splash-dx-20, 0px), var(--splash-dy-12, 0px), 0) scaleX(1.08) scaleY(.94) skewX(-2deg) skewY(.5deg);
-        border-radius: 25px 34px 34px 25px;
-        filter: none;
-        box-shadow: 0 22px 62px rgba(0,0,0,0.60), 0 0 18px rgba(126,225,255,0.10), inset -10px 0 20px rgba(240,202,104,0.08);
+      36% {
+        transform: rotateY(36deg) scale(.985) translateX(2px) translateZ(0);
+        box-shadow: 18px 22px 58px rgba(0,0,0,0.54), inset -14px 0 20px rgba(240,202,104,0.07);
       }
-      46% {
-        transform: translate3d(var(--splash-dx-48, 0px), var(--splash-dy-32, 0px), 0) scaleX(.76) scaleY(1.12) skewX(-9deg) skewY(1.5deg);
-        border-radius: 22px 54px 54px 22px;
-        filter: none;
-        box-shadow: 0 18px 48px rgba(0,0,0,0.58), 0 0 28px rgba(126,225,255,0.16), inset -18px 0 32px rgba(240,202,104,0.14);
-      }
-      70% {
-        transform: translate3d(var(--splash-dx-78, 0px), var(--splash-dy-70, 0px), 0) scaleX(.28) scaleY(.90) skewX(-22deg) skewY(3deg);
-        border-radius: 14px 74px 74px 14px;
-        filter: none;
-        box-shadow: 0 12px 34px rgba(0,0,0,0.50), 0 0 44px rgba(240,202,104,0.22), inset -26px 0 36px rgba(240,202,104,0.20);
-      }
-      88% {
-        transform: translate3d(var(--splash-dx-94, 0px), var(--splash-dy-90, 0px), 0) scaleX(.11) scaleY(.52) skewX(-35deg) skewY(5deg);
-        border-radius: 8px 999px 999px 8px;
-        filter: none;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.42), 0 0 56px rgba(240,202,104,0.30), inset -32px 0 40px rgba(255,241,188,0.22);
+      68% {
+        transform: rotateY(68deg) scale(.94) translateX(8px) translateZ(0);
+        box-shadow: 28px 18px 42px rgba(0,0,0,0.44), inset -24px 0 28px rgba(240,202,104,0.10);
       }
       100% {
-        transform: translate3d(var(--splash-dx, 0px), var(--splash-dy, 0px), 0) scaleX(var(--splash-scale-x, .055)) scaleY(var(--splash-scale-y, .18)) skewX(-42deg) skewY(7deg);
-        border-radius: 999px;
-        filter: none;
-        box-shadow: 0 0 18px rgba(240,202,104,0.18), inset -30px 0 34px rgba(255,241,188,0.18);
+        transform: rotateY(90deg) scale(.88) translateX(12px) translateZ(0);
+        box-shadow: 0 12px 28px rgba(0,0,0,0.34), inset -18px 0 22px rgba(240,202,104,0.08);
       }
     }
 
-    @keyframes splashVortexGlow {
-      0% { opacity: 0; transform: translateX(18px) scale(.76); }
-      22% { opacity: .30; transform: translateX(9px) scale(.90); }
-      56% { opacity: .78; transform: translateX(0) scale(1.05); }
-      86% { opacity: .95; transform: translateX(-2px) scale(.86); }
-      100% { opacity: .35; transform: translateX(6px) scale(.38); }
+    @keyframes splashIconCardTurn {
+      0% { transform: scale(1) rotateY(0deg); }
+      55% { transform: scale(.96) rotateY(-6deg); }
+      100% { transform: scale(.90) rotateY(-12deg); }
     }
 
-    @keyframes splashSuctionStreak {
-      0% { opacity: 0; transform: translateX(-46px) scaleX(.18) scaleY(.52); }
-      28% { opacity: 0; transform: translateX(-38px) scaleX(.24) scaleY(.56); }
-      55% { opacity: .62; transform: translateX(-16px) scaleX(.72) scaleY(.82); }
-      82% { opacity: .82; transform: translateX(4px) scaleX(1.08) scaleY(.58); }
-      100% { opacity: 0; transform: translateX(18px) scaleX(.22) scaleY(.22); }
-    }
-
-    @keyframes splashEdgeGlow {
-      0% { opacity: 0; transform: translateX(0) scaleX(.72); }
-      24% { opacity: .20; transform: translateX(0) scaleX(.86); }
-      54% { opacity: .76; transform: translateX(4px) scaleX(1.05); }
-      82% { opacity: .96; transform: translateX(10px) scaleX(1.22); }
-      100% { opacity: .70; transform: translateX(18px) scaleX(.72); }
-    }
-
-    @keyframes splashRimPull {
-      0% { opacity: 0; clip-path: inset(0 0 0 76% round 22px); }
-      26% { opacity: .26; clip-path: inset(0 0 0 68% round 25px); }
-      58% { opacity: .80; clip-path: inset(0 0 0 48% round 44px); }
-      84% { opacity: 1; clip-path: inset(0 0 0 18% round 999px); }
-      100% { opacity: .64; clip-path: inset(0 0 0 0 round 999px); }
-    }
-
-    @keyframes splashIconSucked {
-      0% { transform: translate3d(0,0,0) scale(1); filter: none; }
-      32% { transform: translate3d(0,0,0) scale(1); filter: none; }
-      56% { transform: translate3d(7px, 0, 0) scaleX(1.12) scaleY(.90); filter: drop-shadow(0 0 10px rgba(240,202,104,0.18)); }
-      78% { transform: translate3d(18px, 0, 0) scaleX(.72) scaleY(1.06) skewX(-8deg); filter: drop-shadow(0 0 14px rgba(240,202,104,0.28)); }
-      100% { transform: translate3d(34px, 0, 0) scaleX(.44) scaleY(.72) skewX(-18deg); filter: drop-shadow(0 0 8px rgba(240,202,104,0.18)); }
+    @keyframes splashCardTurnBackdrop {
+      0% { opacity: .28; }
+      66% { opacity: .12; }
+      100% { opacity: 0; }
     }
 
     .splashOverlay.fadeOnly {
       pointer-events: none;
+      background: transparent;
     }
 
     @keyframes splashFadeOut { to { opacity: 1; } }
@@ -3571,11 +3464,8 @@
     @media (prefers-reduced-motion: reduce) {
       .splashOverlay.dismissing .splashCard,
       .splashOverlay.dismissing .splashIcon,
-      .splashOverlay.dismissing .splashCard::before,
-      .splashOverlay.dismissing .splashCard::after,
-      .splashOverlay.dismissing::before,
-      .splashOverlay.dismissing::after { animation: none; }
-      .splashOverlay.dismissing { animation: none; }
+      .splashOverlay.dismissing::before { animation: none; }
+      .splashOverlay.dismissing { animation: none; background: transparent; }
       .drawerTab.tabAppeared { animation: none; }
     }
 
@@ -5495,6 +5385,38 @@
       if (cardIds.length <= 16) el.handScroller.scrollTop = 0;
     }
 
+    function humanHandNodeForId(id) {
+      return findCardElements(id).find(node => node && el.handGrid?.contains(node) && (node.dataset.zone === 'hand' || node.dataset.zone === 'hand-preview')) || null;
+    }
+
+    function renderHumanHandPickupPreview(finalHandIds, incomingIds) {
+      const incomingSet = new Set(incomingIds || []);
+      applyHandLayoutForCount(finalHandIds.length);
+      el.handGrid.innerHTML = '';
+      finalHandIds.forEach((id, index) => {
+        const card = game.cardsById[id];
+        if (!card) return;
+        const node = createCard(card, {
+          owner: 'You',
+          zone: 'hand',
+          index,
+          playable: false
+        });
+        node.classList.add('pickupPreviewCard');
+        if (incomingSet.has(id)) node.classList.add('pickupIncomingHidden');
+        el.handGrid.appendChild(node);
+      });
+      if (finalHandIds.length <= 16) el.handScroller.scrollTop = 0;
+    }
+
+    function revealHumanPickupPreviewCards() {
+      if (!el.handGrid) return;
+      el.handGrid.querySelectorAll('.pickupIncomingHidden').forEach(node => {
+        node.classList.remove('pickupIncomingHidden');
+        node.classList.add('pickupJustLanded');
+      });
+    }
+
     async function animateHumanPilePickupToHand(pickupIds, playerId, sourceRectsById = {}) {
       const player = game.players[playerId];
       if (!player?.isHuman || !animationsEnabled()) return;
@@ -5504,16 +5426,19 @@
       const currentHandIds = player.hand.slice();
       const currentHandSet = new Set(currentHandIds);
       const incomingIds = uniquePickupIds.filter(id => !currentHandSet.has(id));
-      if (!incomingIds.length) return;
-
-      // Do NOT hide or rebuild the whole hand during pickup. That was causing the
-      // player's entire hand to vanish on blind-flip overplays before the final render.
       const finalHandIds = projectedHumanHandIdsAfterPickup(playerId, incomingIds);
-      applyHandLayoutForCount(finalHandIds.length);
+      if (!finalHandIds.length) return;
+
+      const oldHandRects = new Map();
+      currentHandIds.forEach(id => {
+        const node = humanHandNodeForId(id);
+        if (node && node.getClientRects().length) {
+          const r = node.getBoundingClientRect();
+          oldHandRects.set(id, { left: r.left, top: r.top, width: r.width, height: r.height });
+        }
+      });
 
       const sources = new Map();
-      const sourceNodesToHide = [];
-
       incomingIds.forEach((id, i) => {
         const provided = sourceRectsById && sourceRectsById[id];
         if (provided) {
@@ -5528,42 +5453,64 @@
           }
         }
 
-        // Only hide the incoming pile/table cards. Leave existing hand cards visible.
+        // Hide only the source copies outside the hand. The hand preview below keeps
+        // every final card position reserved so there is never a blank post-landing gap.
         findCardElements(id).forEach(node => {
           if (node.dataset.zone !== 'hand' && !node.classList.contains('clearSourceHidden')) {
             node.classList.add('clearSourceHidden');
-            sourceNodesToHide.push(node);
           }
         });
       });
 
+      // Build the final hand layout immediately. Existing hand cards are visible in
+      // their final spots, incoming cards reserve space invisibly until the sprites land.
+      renderHumanHandPickupPreview(finalHandIds, incomingIds);
       await new Promise(resolve => requestAnimationFrame(resolve));
 
-      const handRect = el.handGrid.getBoundingClientRect();
       const fallbackRect = el.handPanel.getBoundingClientRect();
       const cols = finalHandIds.length <= 12 ? 6 : 8;
       const cardW = parseFloat(getComputedStyle(el.handGrid).getPropertyValue('--hand-card-w')) || Math.max(24, Math.min(42, fallbackRect.width / cols));
       const cardH = parseFloat(getComputedStyle(el.handGrid).getPropertyValue('--hand-card-h')) || cardW * CARD_RATIO;
-      const gap = 3;
-      const baseLeft = (handRect.width ? handRect.left : fallbackRect.left + 6);
-      const baseTop = (handRect.height ? handRect.top : fallbackRect.top + 6);
 
       const targetFor = (id, fallbackIndex) => {
-        const finalIndex = Math.max(0, finalHandIds.indexOf(id));
+        const node = humanHandNodeForId(id);
+        if (node && node.getClientRects().length) {
+          const r = node.getBoundingClientRect();
+          return { left: r.left, top: r.top, width: r.width, height: r.height };
+        }
+        const handRect = el.handGrid.getBoundingClientRect();
+        const baseLeft = (handRect.width ? handRect.left : fallbackRect.left + 6);
+        const baseTop = (handRect.height ? handRect.top : fallbackRect.top + 6);
+        const finalIndex = finalHandIds.indexOf(id);
         const visibleIndex = finalIndex >= 0 ? finalIndex : currentHandIds.length + fallbackIndex;
         const col = visibleIndex % cols;
         const row = Math.min(1, Math.floor(visibleIndex / cols));
         return {
-          left: baseLeft + col * (cardW + gap),
-          top: baseTop + row * (cardH + gap),
+          left: baseLeft + col * (cardW + 3),
+          top: baseTop + row * (cardH + 3),
           width: cardW,
           height: cardH
         };
       };
 
+      const reflowAnimations = [];
+      oldHandRects.forEach((oldRect, id) => {
+        const node = humanHandNodeForId(id);
+        if (!node || !node.getClientRects().length) return;
+        const now = node.getBoundingClientRect();
+        const dx = oldRect.left - now.left;
+        const dy = oldRect.top - now.top;
+        if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+        const anim = node.animate([
+          { transform: `translate(${dx}px, ${dy}px)`, opacity: 1 },
+          { transform: 'translate(0, 0)', opacity: 1 }
+        ], { duration: 260, easing: 'cubic-bezier(.18,.78,.18,1)', fill: 'both' });
+        reflowAnimations.push(anim.finished.catch(() => {}));
+      });
+
       const sprites = [];
       try {
-        const animations = incomingIds.map((id, i) => {
+        const cardAnimations = incomingIds.map((id, i) => {
           const src = sources.get(id) || { id, ...pileCenterRectForCard(i) };
           const target = targetFor(id, i);
           const sprite = buildMotionSprite(id, src);
@@ -5580,11 +5527,14 @@
           });
         });
 
-        await Promise.all(animations);
+        await Promise.all([...cardAnimations, ...reflowAnimations]);
+        revealHumanPickupPreviewCards();
+        await new Promise(resolve => requestAnimationFrame(resolve));
       } finally {
         sprites.forEach(sprite => { if (sprite) sprite.remove(); });
-        // Keep incoming source nodes hidden until the caller mutates state and renders.
-        // Existing hand cards were never hidden, so the hand cannot disappear here.
+        revealHumanPickupPreviewCards();
+        // The preview remains visible until the caller mutates state and renderAll()
+        // replaces it with the real hand, eliminating the delayed blank gap.
       }
     }
 
@@ -6484,11 +6434,11 @@
       overlay.style.setProperty('--splash-scale-y', String(scaleY));
       overlay.style.setProperty('--splash-target-y', `${Math.round(targetCenterY)}px`);
       const finishFromAnimation = event => {
-        if (event.animationName === 'splashCardSuckToTab') finish();
+        if (event.animationName === 'splashCardTwistOut') finish();
       };
       card.addEventListener('animationend', finishFromAnimation, { once: true });
       overlay.classList.add('dismissing');
-      window.setTimeout(finish, 760);
+      window.setTimeout(finish, 620);
     }
 
     function openSplashDrawerPage(pageId) {
