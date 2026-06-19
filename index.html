@@ -2230,6 +2230,11 @@
       animation: pickupCardSettle 170ms cubic-bezier(.18,.84,.22,1) both;
     }
 
+    .layoutResizePolish {
+      transform-origin: top left;
+      will-change: transform;
+    }
+
     @keyframes pickupCardSettle {
       0% { transform: translateY(-1px) scale(1.025); filter: brightness(1.12); }
       100% { transform: translateY(0) scale(1); filter: brightness(1); }
@@ -4023,6 +4028,8 @@
         missedEndgameStoppers: 0,
         expertComparisons: 0,
         expertMatches: 0,
+        roundsCompleted: 0,
+        humanOutFirst: 0,
         recent: []
       };
     }
@@ -4062,6 +4069,38 @@
       try {
         localStorage.setItem(TRAINER_KEY, JSON.stringify(normalizeTrainer(game.trainer)));
       } catch (err) {}
+    }
+
+    function mergeTrainerLifetimeRoundStats(primary, fallback) {
+      const merged = normalizeTrainer(primary);
+      const other = normalizeTrainer(fallback);
+      merged.roundsCompleted = Math.max(Number(merged.roundsCompleted) || 0, Number(other.roundsCompleted) || 0);
+      merged.humanOutFirst = Math.max(Number(merged.humanOutFirst) || 0, Number(other.humanOutFirst) || 0);
+      return merged;
+    }
+
+    function seedTrainerRoundTotalsFromCurrentGameHistory() {
+      const t = normalizeTrainer(game.trainer);
+      const history = Array.isArray(game.roundHistory) ? game.roundHistory : [];
+      if ((Number(t.roundsCompleted) || 0) > 0 || !history.length) {
+        game.trainer = t;
+        return;
+      }
+      t.roundsCompleted = history.length;
+      t.humanOutFirst = history.filter(round => Number(round?.winnerId) === 0).length;
+      game.trainer = t;
+      saveTrainerMemory();
+    }
+
+    function recordTrainerRoundOutcome(winner) {
+      const t = normalizeTrainer(game.trainer);
+      t.roundsCompleted = (Number(t.roundsCompleted) || 0) + 1;
+      if (winner?.isHuman || Number(winner?.id) === 0) {
+        t.humanOutFirst = (Number(t.humanOutFirst) || 0) + 1;
+      }
+      game.trainer = t;
+      saveTrainerMemory();
+      renderTrainerReport(false);
     }
 
     function scoringValue(rank) {
@@ -4245,9 +4284,10 @@
         game.humanQueueActive = false;
         game.humanQueuedMove = null;
         game.humanQueueBlockedIds = [];
-        game.trainer = normalizeTrainer(saved.trainer || game.trainer);
+        game.trainer = mergeTrainerLifetimeRoundStats(saved.trainer || game.trainer, game.trainer);
         game.lastRoundWinnerId = Number.isInteger(saved.lastRoundWinnerId) ? saved.lastRoundWinnerId : null;
         game.lastRoundSummaries = Array.isArray(saved.lastRoundSummaries) ? saved.lastRoundSummaries : null;
+        seedTrainerRoundTotalsFromCurrentGameHistory();
         renderAll();
         if (!game.roundActive && game.lastRoundSummaries?.length) {
           const winner = game.players.find(p => p.id === game.lastRoundWinnerId) || game.players[0];
@@ -5472,12 +5512,17 @@
         const now = node.getBoundingClientRect();
         const dx = oldRect.left - now.left;
         const dy = oldRect.top - now.top;
-        if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+        const sx = oldRect.width && now.width ? oldRect.width / now.width : 1;
+        const sy = oldRect.height && now.height ? oldRect.height / now.height : 1;
+        const moved = Math.abs(dx) >= 1 || Math.abs(dy) >= 1;
+        const resized = Math.abs(1 - sx) >= 0.025 || Math.abs(1 - sy) >= 0.025;
+        if (!moved && !resized) return;
+        node.classList.add('layoutResizePolish');
         const anim = node.animate([
-          { transform: `translate(${dx}px, ${dy}px)`, opacity: 1 },
-          { transform: 'translate(0, 0)', opacity: 1 }
-        ], { duration: 260, easing: 'cubic-bezier(.18,.78,.18,1)', fill: 'both' });
-        reflowAnimations.push(anim.finished.catch(() => {}));
+          { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`, opacity: 1 },
+          { transform: 'translate(0, 0) scale(1, 1)', opacity: 1 }
+        ], { duration: 320, easing: 'cubic-bezier(.16,.82,.19,1)', fill: 'both' });
+        reflowAnimations.push(anim.finished.catch(() => {}).finally(() => node.classList.remove('layoutResizePolish')));
       });
 
       const sprites = [];
@@ -6478,7 +6523,72 @@
       renderNewGameDifficultyList(pendingDifficulty);
     }
 
+    function layoutPolishEnabled() {
+      return animationsEnabled() && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    }
+
+    function responsiveCardLayoutKey(node) {
+      const id = node?.dataset?.cardId;
+      if (!id) return '';
+      const zone = el.handGrid?.contains(node) ? 'hand' : (el.pilePanel?.contains(node) ? 'pile' : 'other');
+      return `${zone}:${id}`;
+    }
+
+    function captureResponsiveCardLayout() {
+      const snapshot = new Map();
+      if (!layoutPolishEnabled()) return snapshot;
+      const roots = [el.handGrid, el.pileGridLeft, el.pileGrid, el.pileCurrentCard].filter(Boolean);
+      roots.forEach(root => {
+        root.querySelectorAll('[data-card-id]').forEach(node => {
+          if (!node || node.classList.contains('motionSprite') || node.classList.contains('clearSourceHidden') || node.classList.contains('pickupIncomingHidden')) return;
+          if (!node.getClientRects().length) return;
+          const style = getComputedStyle(node);
+          if (style.visibility === 'hidden' || style.display === 'none' || Number(style.opacity) === 0) return;
+          const r = node.getBoundingClientRect();
+          if (!r.width || !r.height) return;
+          const key = responsiveCardLayoutKey(node);
+          if (!key || snapshot.has(key)) return;
+          snapshot.set(key, { left: r.left, top: r.top, width: r.width, height: r.height });
+        });
+      });
+      return snapshot;
+    }
+
+    function animateResponsiveCardLayoutFrom(snapshot) {
+      if (!snapshot || !snapshot.size || !layoutPolishEnabled()) return;
+      const nodes = [];
+      [el.handGrid, el.pileGridLeft, el.pileGrid, el.pileCurrentCard].filter(Boolean).forEach(root => {
+        root.querySelectorAll('[data-card-id]').forEach(node => nodes.push(node));
+      });
+      nodes.forEach(node => {
+        if (!node || node.classList.contains('motionSprite') || node.classList.contains('clearSourceHidden') || node.classList.contains('pickupIncomingHidden')) return;
+        const key = responsiveCardLayoutKey(node);
+        const oldRect = key ? snapshot.get(key) : null;
+        if (!oldRect || !node.getClientRects().length) return;
+        const now = node.getBoundingClientRect();
+        if (!now.width || !now.height) return;
+        const dx = oldRect.left - now.left;
+        const dy = oldRect.top - now.top;
+        const sx = oldRect.width / now.width;
+        const sy = oldRect.height / now.height;
+        const moved = Math.abs(dx) >= 1 || Math.abs(dy) >= 1;
+        const resized = Math.abs(1 - sx) >= 0.025 || Math.abs(1 - sy) >= 0.025;
+        if (!moved && !resized) return;
+        node.getAnimations().forEach(anim => {
+          if (anim.effect?.target === node) anim.cancel();
+        });
+        node.classList.add('layoutResizePolish');
+        const duration = resized ? 330 : 250;
+        const anim = node.animate([
+          { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`, opacity: 1 },
+          { transform: 'translate(0, 0) scale(1, 1)', opacity: 1 }
+        ], { duration, easing: 'cubic-bezier(.16,.82,.19,1)', fill: 'both' });
+        anim.finished.catch(() => {}).finally(() => node.classList.remove('layoutResizePolish'));
+      });
+    }
+
     function renderAll() {
+      const layoutSnapshot = captureResponsiveCardLayout();
       renderOpponents();
       renderPile();
       renderMyTable();
@@ -6489,6 +6599,7 @@
       requestAnimationFrame(() => {
         layoutAll();
         updateTurnRacerOverlay();
+        animateResponsiveCardLayoutFrom(layoutSnapshot);
       });
       scheduleSaveGameProgress();
     }
@@ -7692,6 +7803,7 @@
         winnerId: winner.id,
         scores: summaries.map(s => ({ id: s.id, name: s.name, roundPoints: s.points, total: s.total }))
       });
+      recordTrainerRoundOutcome(winner);
       const matchOver = summaries.some(s => s.total >= 150);
       game.matchOver = matchOver;
       game.lastRoundWinnerId = winner.id;
@@ -8011,15 +8123,15 @@
       if (!el.trainerReport) return;
       const t = game.trainer;
       const expertPct = expertMatchPercent(t);
-      const roundsPlayed = Array.isArray(game.roundHistory) ? game.roundHistory.length : 0;
-      const humanOutFirst = roundsPlayed ? game.roundHistory.filter(r => r.winnerId === 0).length : 0;
+      const roundsPlayed = Number(t.roundsCompleted) || 0;
+      const humanOutFirst = Number(t.humanOutFirst) || 0;
       const outPct = roundsPlayed ? Math.round((humanOutFirst / roundsPlayed) * 100) : null;
       const expertLine = expertPct === null
         ? 'No comparable turns yet.'
         : `${expertPct}% of your comparable plays matched the Expert planner's first-choice play (${t.expertMatches}/${t.expertComparisons}).`;
       const outLine = outPct === null
-        ? 'No completed rounds yet.'
-        : `You went out first in ${outPct}% of completed rounds (${humanOutFirst}/${roundsPlayed}).`;
+        ? 'No completed rounds tracked yet.'
+        : `You went out first in ${outPct}% of all tracked completed rounds (${humanOutFirst}/${roundsPlayed}).`;
       const comparisonLine = expertPct === null || outPct === null
         ? 'Play more comparable turns and finish more rounds to connect choices with outcomes.'
         : 'Expert match tracks play-by-play decision alignment; going out first tracks whether those choices are turning into round wins.';
