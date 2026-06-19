@@ -3233,7 +3233,7 @@
     }
 
     .splashOverlay.dismissing {
-      animation: splashPageCardTurnOut 560ms cubic-bezier(.22,.72,.10,1) forwards;
+      animation: splashPageCardTurnOut 360ms cubic-bezier(.20,.76,.12,1) forwards;
     }
 
     .splashOverlay::before,
@@ -6427,7 +6427,7 @@
           if (finished) return;
           overlay.addEventListener('animationend', finishFromAnimation, { once: true });
           overlay.classList.add('dismissing');
-          window.setTimeout(finish, 760);
+          window.setTimeout(finish, 500);
         });
       });
     }
