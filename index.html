@@ -3218,12 +3218,22 @@
       100% { opacity: 1; transform: translateX(0) scale(1); filter: blur(0); }
     }
 
+    .splashOverlay.prepareFlip,
     .splashOverlay.dismissing {
       pointer-events: none;
       overflow: hidden;
-      background: transparent;
-      perspective: 920px;
-      perspective-origin: 50% 50%;
+      transform-origin: 50% 50%;
+      transform-style: preserve-3d;
+      -webkit-transform-style: preserve-3d;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      will-change: transform;
+      transform: perspective(980px) rotateY(0deg) translate3d(0,0,0);
+      contain: layout paint style;
+    }
+
+    .splashOverlay.dismissing {
+      animation: splashPageCardTurnOut 560ms cubic-bezier(.22,.72,.10,1) forwards;
     }
 
     .splashOverlay::before,
@@ -3234,62 +3244,23 @@
       opacity: 0;
     }
 
-    .splashOverlay.dismissing::before {
-      inset: 0;
-      z-index: 0;
-      background: radial-gradient(circle at 50% 50%, rgba(240,202,104,0.10), transparent 36%);
-      animation: splashCardTurnBackdrop 520ms cubic-bezier(.20,.72,.18,1) forwards;
+    .splashOverlay.dismissing::before,
+    .splashOverlay.dismissing::after,
+    .splashOverlay.dismissing .splashCard,
+    .splashOverlay.dismissing .splashIcon,
+    .splashOverlay.dismissing .splashCard::before,
+    .splashOverlay.dismissing .splashCard::after {
+      animation: none !important;
     }
 
     .splashOverlay.dismissing .splashCard {
-      animation: splashCardTwistOut 520ms cubic-bezier(.20,.72,.18,1) forwards;
-      transform-origin: 50% 50%;
-      transform-style: preserve-3d;
-      will-change: transform, box-shadow;
-      backface-visibility: hidden;
-      overflow: hidden;
+      transform: translateZ(0);
+      will-change: auto;
     }
 
-    .splashOverlay.dismissing .splashCard::before,
-    .splashOverlay.dismissing .splashCard::after {
-      animation: none;
-    }
-
-    .splashOverlay.dismissing .splashIcon {
-      animation: splashIconCardTurn 520ms cubic-bezier(.20,.72,.18,1) forwards;
-      transform-origin: 50% 50%;
-      will-change: transform;
-    }
-
-    @keyframes splashCardTwistOut {
-      0% {
-        transform: rotateY(0deg) scale(1) translateZ(0);
-        box-shadow: 0 24px 70px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,255,255,0.09);
-      }
-      36% {
-        transform: rotateY(36deg) scale(.985) translateX(2px) translateZ(0);
-        box-shadow: 18px 22px 58px rgba(0,0,0,0.54), inset -14px 0 20px rgba(240,202,104,0.07);
-      }
-      68% {
-        transform: rotateY(68deg) scale(.94) translateX(8px) translateZ(0);
-        box-shadow: 28px 18px 42px rgba(0,0,0,0.44), inset -24px 0 28px rgba(240,202,104,0.10);
-      }
-      100% {
-        transform: rotateY(90deg) scale(.88) translateX(12px) translateZ(0);
-        box-shadow: 0 12px 28px rgba(0,0,0,0.34), inset -18px 0 22px rgba(240,202,104,0.08);
-      }
-    }
-
-    @keyframes splashIconCardTurn {
-      0% { transform: scale(1) rotateY(0deg); }
-      55% { transform: scale(.96) rotateY(-6deg); }
-      100% { transform: scale(.90) rotateY(-12deg); }
-    }
-
-    @keyframes splashCardTurnBackdrop {
-      0% { opacity: .28; }
-      66% { opacity: .12; }
-      100% { opacity: 0; }
+    @keyframes splashPageCardTurnOut {
+      0% { transform: perspective(980px) rotateY(0deg) translate3d(0,0,0); }
+      100% { transform: perspective(980px) rotateY(89.8deg) translate3d(0,0,0); }
     }
 
     .splashOverlay.fadeOnly {
@@ -3462,10 +3433,11 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
+      .splashOverlay.dismissing,
       .splashOverlay.dismissing .splashCard,
       .splashOverlay.dismissing .splashIcon,
       .splashOverlay.dismissing::before { animation: none; }
-      .splashOverlay.dismissing { animation: none; background: transparent; }
+      .splashOverlay.dismissing { transform: none; }
       .drawerTab.tabAppeared { animation: none; }
     }
 
@@ -6373,7 +6345,7 @@
       renderDifficultyDescriptions();
     }
 
-    function dismissSplash() {
+    function dismissSplash(afterFinish) {
       if (!el.splashOverlay || el.splashOverlay.classList.contains('hidden')) return;
       const overlay = el.splashOverlay;
       const card = overlay.querySelector('.splashCard');
@@ -6382,7 +6354,7 @@
         if (finished) return;
         finished = true;
         overlay.classList.add('hidden');
-        overlay.classList.remove('dismissing', 'fadeOnly');
+        overlay.classList.remove('prepareFlip', 'dismissing', 'fadeOnly');
         overlay.style.removeProperty('--splash-dx');
         overlay.style.removeProperty('--splash-dy');
         overlay.style.removeProperty('--splash-dx-20');
@@ -6397,7 +6369,17 @@
         overlay.style.removeProperty('--splash-scale-y');
         overlay.style.removeProperty('--splash-target-y');
         document.body.classList.remove('splash-active');
-        if (el.drawerTab) {
+        if (typeof afterFinish === 'function') {
+          window.requestAnimationFrame(() => {
+            try { afterFinish(); } catch (err) { console.error(err); }
+            if (el.drawerTab) {
+              el.drawerTab.classList.remove('tabAppeared');
+              void el.drawerTab.offsetWidth;
+              el.drawerTab.classList.add('tabAppeared');
+              window.setTimeout(() => el.drawerTab?.classList.remove('tabAppeared'), 320);
+            }
+          });
+        } else if (el.drawerTab) {
           el.drawerTab.classList.remove('tabAppeared');
           void el.drawerTab.offsetWidth;
           el.drawerTab.classList.add('tabAppeared');
@@ -6434,11 +6416,20 @@
       overlay.style.setProperty('--splash-scale-y', String(scaleY));
       overlay.style.setProperty('--splash-target-y', `${Math.round(targetCenterY)}px`);
       const finishFromAnimation = event => {
-        if (event.animationName === 'splashCardTwistOut') finish();
+        if (event.animationName === 'splashPageCardTurnOut') finish();
       };
-      card.addEventListener('animationend', finishFromAnimation, { once: true });
-      overlay.classList.add('dismissing');
-      window.setTimeout(finish, 620);
+      overlay.classList.add('prepareFlip');
+      // Let modal removal/layout settle and let the browser promote the splash to its
+      // own compositor layer before the flip starts. Starting the animation in the
+      // same frame as setup work was the source of the visible hitch.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (finished) return;
+          overlay.addEventListener('animationend', finishFromAnimation, { once: true });
+          overlay.classList.add('dismissing');
+          window.setTimeout(finish, 760);
+        });
+      });
     }
 
     function openSplashDrawerPage(pageId) {
@@ -6451,12 +6442,14 @@
         refreshSplashHome();
         return;
       }
-      if (restoreGameProgress()) {
-        dismissSplash();
-      } else {
+      // Restore/render the saved board before the splash flips away so the
+      // actual game state is visible underneath during the card-turn exit.
+      if (!restoreGameProgress()) {
         refreshSplashHome();
         toast('Could not continue saved game.');
+        return;
       }
+      dismissSplash();
     }
 
     function renderDifficultyButtonList(container, { compact = false, active = state.difficulty } = {}) {
@@ -8322,9 +8315,14 @@
       closeNewGameConfirm();
       if (el.drawer) el.drawer.classList.remove('open');
       showHome();
+      const splashVisible = !!(el.splashOverlay && !el.splashOverlay.classList.contains('hidden'));
       try { localStorage.removeItem(GAME_KEY); } catch (err) {}
+      // Deal/render the new board before the splash flips away so the player
+      // sees the real starting state underneath during the transition. The
+      // dismiss routine waits a couple frames before animating, which keeps
+      // this render work from hitching the flip itself.
       startNewGame();
-      dismissSplash();
+      if (splashVisible) dismissSplash();
     }
 
     function activateSettingsTab(tabName) {
