@@ -6527,13 +6527,6 @@
       return animationsEnabled() && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     }
 
-    function responsiveCardLayoutKey(node) {
-      const id = node?.dataset?.cardId;
-      if (!id) return '';
-      const zone = el.handGrid?.contains(node) ? 'hand' : (el.pilePanel?.contains(node) ? 'pile' : 'other');
-      return `${zone}:${id}`;
-    }
-
     function captureResponsiveCardLayout() {
       const snapshot = new Map();
       if (!layoutPolishEnabled()) return snapshot;
@@ -6546,9 +6539,9 @@
           if (style.visibility === 'hidden' || style.display === 'none' || Number(style.opacity) === 0) return;
           const r = node.getBoundingClientRect();
           if (!r.width || !r.height) return;
-          const key = responsiveCardLayoutKey(node);
-          if (!key || snapshot.has(key)) return;
-          snapshot.set(key, { left: r.left, top: r.top, width: r.width, height: r.height });
+          const id = node.dataset.cardId;
+          if (!id || snapshot.has(id)) return;
+          snapshot.set(id, { left: r.left, top: r.top, width: r.width, height: r.height });
         });
       });
       return snapshot;
@@ -6562,8 +6555,8 @@
       });
       nodes.forEach(node => {
         if (!node || node.classList.contains('motionSprite') || node.classList.contains('clearSourceHidden') || node.classList.contains('pickupIncomingHidden')) return;
-        const key = responsiveCardLayoutKey(node);
-        const oldRect = key ? snapshot.get(key) : null;
+        const id = node.dataset.cardId;
+        const oldRect = id ? snapshot.get(id) : null;
         if (!oldRect || !node.getClientRects().length) return;
         const now = node.getBoundingClientRect();
         if (!now.width || !now.height) return;
@@ -6599,7 +6592,7 @@
       requestAnimationFrame(() => {
         layoutAll();
         updateTurnRacerOverlay();
-        animateResponsiveCardLayoutFrom(layoutSnapshot);
+        requestAnimationFrame(() => animateResponsiveCardLayoutFrom(layoutSnapshot));
       });
       scheduleSaveGameProgress();
     }
@@ -7271,6 +7264,17 @@
       game.humanQueueBlockedIds = willContinue ? [...new Set(cardIds || [])] : [];
     }
 
+    function activateHumanMoveQueue(blockedIds = []) {
+      if (!game.roundActive || game.turn !== 0) {
+        clearHumanMoveQueue();
+        return;
+      }
+      game.humanQueueActive = true;
+      game.humanQueuedMove = null;
+      game.humanQueueBlockedIds = [...new Set((blockedIds || []).filter(Boolean))];
+      markQueuedMoveDom();
+    }
+
     function clearHumanMoveQueue() {
       game.humanQueueActive = false;
       game.humanQueuedMove = null;
@@ -7589,8 +7593,13 @@
         game.pile = [];
         recomputeActive();
         renderAll();
-        await textPromise;
-        if (!player.isHuman) await sleep(AI_CLEAR_MS);
+        if (player?.isHuman) {
+          // The burst text is decoration. Do not keep the hand locked after the cards stop moving.
+          void textPromise;
+        } else {
+          await textPromise;
+          await sleep(AI_CLEAR_MS);
+        }
       } finally {
         game.clearInProgress = false;
         scheduleSaveGameProgress(60);
@@ -7600,7 +7609,7 @@
     async function continueSamePlayer(playerId) {
       game.turn = playerId;
       renderAll();
-      await sleep(180);
+      if (!game.players[playerId]?.isHuman) await sleep(120);
     }
 
     function advanceTurn(fromPlayerId = game.turn) {
@@ -7883,6 +7892,7 @@
       if (overplay) {
         const extraIds = (!isAi && player.isHuman) ? await chooseHumanBlindOverplayExtras(card.rank, cardId, expertBefore, beforeSim) : [];
         const allOverplayIds = [cardId, ...extraIds];
+        if (!isAi && player.isHuman) activateHumanMoveQueue(allOverplayIds);
         const extraSources = extraIds.length ? captureMoveSources(extraIds, playerId) : [];
         const snap = game.pile.slice().concat(allOverplayIds);
         addLog(`${playerDoes(player, 'flip', 'flips')} ${card.rank}`, `Blind overplay. ${playerTakesPile(player)} and ${playerContinues(player).toLowerCase()}.`, snap);
@@ -7899,7 +7909,8 @@
           showAction(playerTakesPile(player));
           const projectedPickupHandCount = player.hand.length + game.pile.length;
           await animatePilePickup(game.pile.slice(), playerId, {}, projectedPickupHandCount);
-          await badgePromise;
+          // The OVERPLAY badge may linger, but it should never delay the next playable moment.
+          void badgePromise;
           player.hand.push(...game.pile);
           player.hand = sortCardIds([...new Set(player.hand)]);
           game.pile = [];
@@ -7918,7 +7929,9 @@
       const projectedBlindCount = card.rank === '10'
         ? 0
         : (game.currentValue === RVAL[card.rank] ? game.currentCount + 1 : 1);
-      if (card.rank === '10' || projectedBlindCount >= 4) game.clearInProgress = true;
+      const blindKeepsTurn = card.rank === '10' || projectedBlindCount >= 4;
+      if (!isAi && player.isHuman && blindKeepsTurn) activateHumanMoveQueue([cardId]);
+      if (blindKeepsTurn) game.clearInProgress = true;
 
       const beforeLiveIds = splitPileLive().live.slice();
       game.pile.push(cardId);
