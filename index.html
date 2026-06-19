@@ -3204,44 +3204,210 @@
     .splashOverlay.dismissing {
       pointer-events: none;
       overflow: hidden;
-      animation: splashBackdropClear 560ms linear forwards;
+      animation: splashPageSuckToTab 680ms cubic-bezier(.18,.72,.08,1) forwards;
+      will-change: clip-path;
+    }
+
+    .splashOverlay::before,
+    .splashOverlay::after {
+      content: "";
+      position: fixed;
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    .splashOverlay.dismissing::before {
+      z-index: 1;
+      right: calc(var(--board-side-gap) - 26px);
+      top: calc(var(--splash-target-y, 62vh) - 102px);
+      width: 176px;
+      height: 204px;
+      border-radius: 999px 0 0 999px;
+      background:
+        radial-gradient(ellipse at 100% 50%, rgba(240,202,104,0.62), rgba(126,225,255,0.26) 38%, transparent 72%),
+        linear-gradient(90deg, transparent, rgba(240,202,104,0.18));
+      filter: blur(5px);
+      animation: splashVortexGlow 680ms cubic-bezier(.18,.72,.08,1) forwards;
+    }
+
+    .splashOverlay.dismissing::after {
+      z-index: 1;
+      right: calc(var(--board-side-gap) + 2px);
+      top: calc(var(--splash-target-y, 62vh) - 64px);
+      width: min(62vw, 300px);
+      height: 128px;
+      border-radius: 999px 0 0 999px;
+      background:
+        linear-gradient(90deg, transparent 0%, rgba(126,225,255,0.00) 20%, rgba(126,225,255,0.22) 48%, rgba(240,202,104,0.44) 100%),
+        repeating-linear-gradient(92deg, transparent 0 18px, rgba(255,255,255,0.18) 19px 22px, transparent 23px 43px);
+      filter: blur(.15px);
+      transform-origin: right center;
+      animation: splashSuctionStreak 680ms cubic-bezier(.18,.72,.08,1) forwards;
+      mix-blend-mode: screen;
     }
 
     .splashOverlay.dismissing .splashCard {
-      animation: splashCardSuckToTab 560ms cubic-bezier(.33,0,.12,1) forwards;
-      transform-origin: center center;
-      will-change: transform, opacity, filter, border-radius;
+      animation: splashCardSuckToTab 680ms cubic-bezier(.18,.72,.08,1) forwards;
+      transform-origin: right center;
+      overflow: hidden;
+      will-change: transform, filter, border-radius, box-shadow;
       backface-visibility: hidden;
     }
 
-    @keyframes splashBackdropClear {
-      from { opacity: 1; }
-      to { opacity: 0; }
+    .splashOverlay.dismissing .splashCard::before,
+    .splashOverlay.dismissing .splashCard::after {
+      content: "";
+      position: absolute;
+      inset: -2px;
+      pointer-events: none;
+      border-radius: inherit;
+      z-index: 4;
+    }
+
+    .splashOverlay.dismissing .splashCard::before {
+      background:
+        linear-gradient(90deg, transparent 0 52%, rgba(126,225,255,0.18) 72%, rgba(240,202,104,0.72) 96%),
+        radial-gradient(ellipse at 100% 50%, rgba(255,241,188,0.74), transparent 48%);
+      mix-blend-mode: screen;
+      animation: splashEdgeGlow 680ms cubic-bezier(.18,.72,.08,1) forwards;
+    }
+
+    .splashOverlay.dismissing .splashCard::after {
+      border: 2px solid rgba(240,202,104,0.36);
+      box-shadow:
+        inset -18px 0 34px rgba(240,202,104,0.22),
+        0 0 28px rgba(126,225,255,0.16),
+        0 0 48px rgba(240,202,104,0.11);
+      clip-path: inset(0 0 0 58% round 22px);
+      animation: splashRimPull 680ms cubic-bezier(.18,.72,.08,1) forwards;
+    }
+
+    .splashOverlay.dismissing .splashIcon {
+      transform-origin: 82% 50%;
+      animation: splashIconSucked 680ms cubic-bezier(.18,.72,.08,1) forwards;
+      will-change: transform, filter;
+    }
+
+    @keyframes splashPageSuckToTab {
+      0% {
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+      }
+      42% {
+        clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+      }
+      72% {
+        clip-path: polygon(
+          18% 0,
+          100% calc(var(--splash-target-y, 62vh) - 58px),
+          100% calc(var(--splash-target-y, 62vh) + 58px),
+          18% 100%
+        );
+      }
+      88% {
+        clip-path: polygon(
+          72% calc(var(--splash-target-y, 62vh) - 92px),
+          100% calc(var(--splash-target-y, 62vh) - 31px),
+          100% calc(var(--splash-target-y, 62vh) + 31px),
+          72% calc(var(--splash-target-y, 62vh) + 92px)
+        );
+      }
+      100% {
+        clip-path: polygon(
+          100% calc(var(--splash-target-y, 62vh) - 1px),
+          100% calc(var(--splash-target-y, 62vh) - 1px),
+          100% calc(var(--splash-target-y, 62vh) + 1px),
+          100% calc(var(--splash-target-y, 62vh) + 1px)
+        );
+      }
     }
 
     @keyframes splashCardSuckToTab {
-      from {
-        opacity: 1;
-        transform: translate3d(0,0,0) scale(1);
+      0% {
+        transform: translate3d(0,0,0) scaleX(1) scaleY(1) skewX(0deg) skewY(0deg);
         border-radius: 24px;
-        filter: blur(0);
+        filter: none;
+        box-shadow: 0 24px 70px rgba(0,0,0,0.62), inset 0 1px 0 rgba(255,255,255,0.09);
       }
-      to {
-        opacity: .12;
-        transform: translate3d(var(--splash-dx, 0px), var(--splash-dy, 0px), 0) scale(var(--splash-scale, .06));
-        border-radius: 12px;
-        filter: blur(.8px);
+      18% {
+        transform: translate3d(var(--splash-dx-20, 0px), var(--splash-dy-12, 0px), 0) scaleX(1.08) scaleY(.94) skewX(-2deg) skewY(.5deg);
+        border-radius: 25px 34px 34px 25px;
+        filter: none;
+        box-shadow: 0 22px 62px rgba(0,0,0,0.60), 0 0 18px rgba(126,225,255,0.10), inset -10px 0 20px rgba(240,202,104,0.08);
       }
+      46% {
+        transform: translate3d(var(--splash-dx-48, 0px), var(--splash-dy-32, 0px), 0) scaleX(.76) scaleY(1.12) skewX(-9deg) skewY(1.5deg);
+        border-radius: 22px 54px 54px 22px;
+        filter: none;
+        box-shadow: 0 18px 48px rgba(0,0,0,0.58), 0 0 28px rgba(126,225,255,0.16), inset -18px 0 32px rgba(240,202,104,0.14);
+      }
+      70% {
+        transform: translate3d(var(--splash-dx-78, 0px), var(--splash-dy-70, 0px), 0) scaleX(.28) scaleY(.90) skewX(-22deg) skewY(3deg);
+        border-radius: 14px 74px 74px 14px;
+        filter: none;
+        box-shadow: 0 12px 34px rgba(0,0,0,0.50), 0 0 44px rgba(240,202,104,0.22), inset -26px 0 36px rgba(240,202,104,0.20);
+      }
+      88% {
+        transform: translate3d(var(--splash-dx-94, 0px), var(--splash-dy-90, 0px), 0) scaleX(.11) scaleY(.52) skewX(-35deg) skewY(5deg);
+        border-radius: 8px 999px 999px 8px;
+        filter: none;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.42), 0 0 56px rgba(240,202,104,0.30), inset -32px 0 40px rgba(255,241,188,0.22);
+      }
+      100% {
+        transform: translate3d(var(--splash-dx, 0px), var(--splash-dy, 0px), 0) scaleX(var(--splash-scale-x, .055)) scaleY(var(--splash-scale-y, .18)) skewX(-42deg) skewY(7deg);
+        border-radius: 999px;
+        filter: none;
+        box-shadow: 0 0 18px rgba(240,202,104,0.18), inset -30px 0 34px rgba(255,241,188,0.18);
+      }
+    }
+
+    @keyframes splashVortexGlow {
+      0% { opacity: 0; transform: translateX(18px) scale(.76); }
+      22% { opacity: .30; transform: translateX(9px) scale(.90); }
+      56% { opacity: .78; transform: translateX(0) scale(1.05); }
+      86% { opacity: .95; transform: translateX(-2px) scale(.86); }
+      100% { opacity: .35; transform: translateX(6px) scale(.38); }
+    }
+
+    @keyframes splashSuctionStreak {
+      0% { opacity: 0; transform: translateX(-46px) scaleX(.18) scaleY(.52); }
+      28% { opacity: 0; transform: translateX(-38px) scaleX(.24) scaleY(.56); }
+      55% { opacity: .62; transform: translateX(-16px) scaleX(.72) scaleY(.82); }
+      82% { opacity: .82; transform: translateX(4px) scaleX(1.08) scaleY(.58); }
+      100% { opacity: 0; transform: translateX(18px) scaleX(.22) scaleY(.22); }
+    }
+
+    @keyframes splashEdgeGlow {
+      0% { opacity: 0; transform: translateX(0) scaleX(.72); }
+      24% { opacity: .20; transform: translateX(0) scaleX(.86); }
+      54% { opacity: .76; transform: translateX(4px) scaleX(1.05); }
+      82% { opacity: .96; transform: translateX(10px) scaleX(1.22); }
+      100% { opacity: .70; transform: translateX(18px) scaleX(.72); }
+    }
+
+    @keyframes splashRimPull {
+      0% { opacity: 0; clip-path: inset(0 0 0 76% round 22px); }
+      26% { opacity: .26; clip-path: inset(0 0 0 68% round 25px); }
+      58% { opacity: .80; clip-path: inset(0 0 0 48% round 44px); }
+      84% { opacity: 1; clip-path: inset(0 0 0 18% round 999px); }
+      100% { opacity: .64; clip-path: inset(0 0 0 0 round 999px); }
+    }
+
+    @keyframes splashIconSucked {
+      0% { transform: translate3d(0,0,0) scale(1); filter: none; }
+      32% { transform: translate3d(0,0,0) scale(1); filter: none; }
+      56% { transform: translate3d(7px, 0, 0) scaleX(1.12) scaleY(.90); filter: drop-shadow(0 0 10px rgba(240,202,104,0.18)); }
+      78% { transform: translate3d(18px, 0, 0) scaleX(.72) scaleY(1.06) skewX(-8deg); filter: drop-shadow(0 0 14px rgba(240,202,104,0.28)); }
+      100% { transform: translate3d(34px, 0, 0) scaleX(.44) scaleY(.72) skewX(-18deg); filter: drop-shadow(0 0 8px rgba(240,202,104,0.18)); }
     }
 
     .splashOverlay.fadeOnly {
       pointer-events: none;
-      animation: splashFadeOut 160ms ease forwards;
     }
 
-    @keyframes splashFadeOut { to { opacity: 0; } }
+    @keyframes splashFadeOut { to { opacity: 1; } }
 
     .splashCard {
+      position: relative;
       width: min(94vw, 410px);
       max-height: calc(100dvh - 24px - var(--safe-top) - var(--safe-bottom));
       overflow-y: auto;
@@ -3403,8 +3569,13 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .splashOverlay.dismissing .splashCard { animation: none; }
-      .splashOverlay.dismissing { animation: splashFadeOut 160ms ease forwards; }
+      .splashOverlay.dismissing .splashCard,
+      .splashOverlay.dismissing .splashIcon,
+      .splashOverlay.dismissing .splashCard::before,
+      .splashOverlay.dismissing .splashCard::after,
+      .splashOverlay.dismissing::before,
+      .splashOverlay.dismissing::after { animation: none; }
+      .splashOverlay.dismissing { animation: none; }
       .drawerTab.tabAppeared { animation: none; }
     }
 
@@ -6264,7 +6435,17 @@
         overlay.classList.remove('dismissing', 'fadeOnly');
         overlay.style.removeProperty('--splash-dx');
         overlay.style.removeProperty('--splash-dy');
-        overlay.style.removeProperty('--splash-scale');
+        overlay.style.removeProperty('--splash-dx-20');
+        overlay.style.removeProperty('--splash-dy-12');
+        overlay.style.removeProperty('--splash-dx-48');
+        overlay.style.removeProperty('--splash-dy-32');
+        overlay.style.removeProperty('--splash-dx-78');
+        overlay.style.removeProperty('--splash-dy-70');
+        overlay.style.removeProperty('--splash-dx-94');
+        overlay.style.removeProperty('--splash-dy-90');
+        overlay.style.removeProperty('--splash-scale-x');
+        overlay.style.removeProperty('--splash-scale-y');
+        overlay.style.removeProperty('--splash-target-y');
         document.body.classList.remove('splash-active');
         if (el.drawerTab) {
           el.drawerTab.classList.remove('tabAppeared');
@@ -6276,7 +6457,7 @@
       const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (reduced || !card) {
         overlay.classList.add('fadeOnly');
-        window.setTimeout(finish, 180);
+        window.setTimeout(finish, 20);
         return;
       }
       const cardRect = card.getBoundingClientRect();
@@ -6285,16 +6466,29 @@
       const targetCenterY = targetRect ? targetRect.top + targetRect.height / 2 : window.innerHeight * .62;
       const cardCenterX = cardRect.left + cardRect.width / 2;
       const cardCenterY = cardRect.top + cardRect.height / 2;
-      const scale = targetRect ? Math.max(.045, Math.min(.09, Math.min(targetRect.width / cardRect.width, targetRect.height / cardRect.height) * 1.15)) : .06;
-      overlay.style.setProperty('--splash-dx', `${Math.round(targetCenterX - cardCenterX)}px`);
-      overlay.style.setProperty('--splash-dy', `${Math.round(targetCenterY - cardCenterY)}px`);
-      overlay.style.setProperty('--splash-scale', String(scale));
+      const dx = targetCenterX - cardCenterX;
+      const dy = targetCenterY - cardCenterY;
+      const scaleX = targetRect ? Math.max(.035, Math.min(.08, (targetRect.width / cardRect.width) * 1.2)) : .055;
+      const scaleY = targetRect ? Math.max(.10, Math.min(.22, (targetRect.height / cardRect.height) * .95)) : .18;
+      overlay.style.setProperty('--splash-dx', `${Math.round(dx)}px`);
+      overlay.style.setProperty('--splash-dy', `${Math.round(dy)}px`);
+      overlay.style.setProperty('--splash-dx-20', `${Math.round(dx * .20)}px`);
+      overlay.style.setProperty('--splash-dy-12', `${Math.round(dy * .12)}px`);
+      overlay.style.setProperty('--splash-dx-48', `${Math.round(dx * .48)}px`);
+      overlay.style.setProperty('--splash-dy-32', `${Math.round(dy * .32)}px`);
+      overlay.style.setProperty('--splash-dx-78', `${Math.round(dx * .78)}px`);
+      overlay.style.setProperty('--splash-dy-70', `${Math.round(dy * .70)}px`);
+      overlay.style.setProperty('--splash-dx-94', `${Math.round(dx * .94)}px`);
+      overlay.style.setProperty('--splash-dy-90', `${Math.round(dy * .90)}px`);
+      overlay.style.setProperty('--splash-scale-x', String(scaleX));
+      overlay.style.setProperty('--splash-scale-y', String(scaleY));
+      overlay.style.setProperty('--splash-target-y', `${Math.round(targetCenterY)}px`);
       const finishFromAnimation = event => {
         if (event.animationName === 'splashCardSuckToTab') finish();
       };
       card.addEventListener('animationend', finishFromAnimation, { once: true });
       overlay.classList.add('dismissing');
-      window.setTimeout(finish, 640);
+      window.setTimeout(finish, 760);
     }
 
     function openSplashDrawerPage(pageId) {
