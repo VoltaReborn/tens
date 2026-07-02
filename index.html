@@ -14,6 +14,7 @@
       --felt: #124a3b;
       --felt-deep: #071f1a;
       --custom-card-back: #1e4e8c;
+      --custom-card-image: linear-gradient(180deg,#222,#111);
       --panel: rgba(7, 15, 18, 0.78);
       --panel-2: rgba(255, 255, 255, 0.075);
       --line: rgba(255, 255, 255, 0.16);
@@ -438,6 +439,15 @@
       box-shadow:0 2px 5px rgba(0,0,0,.33), inset 0 0 0 2px rgba(255,255,255,.12);
     }
 
+    body[data-cardback="custom-image"] .backCard {
+      background-color: #111;
+      background-image: var(--custom-card-image), linear-gradient(180deg,#222,#111);
+      background-size: cover;
+      background-position: center;
+      border-color: rgba(255,255,255,.24);
+      box-shadow: 0 2px 5px rgba(0,0,0,.33), inset 0 0 0 2px rgba(255,255,255,.10), inset 0 1px 0 rgba(255,255,255,.18);
+    }
+
     .stack .backCard {
       --card-w: var(--stack-card-w);
       --card-h: var(--stack-card-h);
@@ -854,6 +864,19 @@
       transition: none !important;
     }
 
+    .drawer:not(.open):not(.dragging) .drawerBody {
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .drawer.open .drawerBody,
+    .drawer.dragging .drawerBody {
+      visibility: visible;
+      opacity: 1;
+      pointer-events: auto;
+    }
+
     .drawerTab {
       position: absolute;
       left: -21px;
@@ -927,6 +950,7 @@
     }
 
     .drawerContent {
+      height: 100%;
       min-height: 0;
       overflow-y: auto;
       overscroll-behavior: contain;
@@ -1205,6 +1229,148 @@
     }
 
 
+    .hiddenFaceSelect {
+      display: none !important;
+    }
+
+    .faceChoiceGallery {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      width: 100%;
+      margin-top: 6px;
+    }
+
+    .faceOption {
+      min-height: 96px;
+      padding: 8px 6px 7px;
+      border-radius: 13px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.16);
+      color: #f7fbff;
+      display: grid;
+      justify-items: center;
+      align-content: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .faceOption.active {
+      border-color: rgba(240,202,104,.74);
+      box-shadow: 0 0 0 2px rgba(240,202,104,.13), inset 0 0 0 1px rgba(255,255,255,.05);
+      background: rgba(240,202,104,.08);
+    }
+
+    .facePreviewCard {
+      width: 38px;
+      height: 54px;
+      border-radius: 7px;
+      border: 1px solid rgba(255,255,255,.62);
+      position: relative;
+      box-shadow: 0 2px 7px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.35);
+      overflow: hidden;
+    }
+
+    .facePreviewCard.light {
+      background: #f8f8f3;
+      color: #151719;
+      border-color: rgba(255,255,255,.70);
+    }
+
+    .facePreviewCard.dark {
+      background: #22282e;
+      color: #edf3f6;
+      border-color: rgba(255,255,255,.20);
+    }
+
+    .facePreviewCard .fpCorner {
+      position: absolute;
+      left: 4px;
+      top: 3px;
+      display: flex;
+      flex-direction: column;
+      line-height: .86;
+      font-weight: 1000;
+      letter-spacing: -.055em;
+      font-size: 9px;
+    }
+
+    .facePreviewCard .fpSuit {
+      font-size: 8px;
+      letter-spacing: 0;
+    }
+
+    .facePreviewCard .fpCenter {
+      position: absolute;
+      left: 50%;
+      top: 51%;
+      transform: translate(-50%, -50%);
+      font-size: 22px;
+      font-weight: 1000;
+      line-height: 1;
+    }
+
+    .faceOption span {
+      font-size: .62rem;
+      line-height: 1;
+      color: rgba(255,255,255,.9);
+      font-weight: 1000;
+      text-align: center;
+    }
+
+    .cardBackOption[data-backstyle="custom-image"] .cardBackThumb,
+    .cardBackThumb[data-style="custom-image"] {
+      background-color: #111;
+      background-image: var(--custom-card-image), linear-gradient(180deg,#222,#111) !important;
+      background-size: cover !important;
+      background-position: center !important;
+    }
+
+    .photoBackPicker {
+      width: 100% !important;
+      max-width: none !important;
+      min-width: 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: flex-end !important;
+      gap: 9px !important;
+      overflow: hidden !important;
+    }
+
+    .photoInputPreview {
+      width: 64px !important;
+      height: 90px !important;
+      flex: 0 0 64px !important;
+      border-radius: 10px !important;
+      box-shadow: 0 3px 9px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.22) !important;
+    }
+
+    .cardBackImageRow {
+      display: grid !important;
+      grid-template-columns: auto minmax(0, 1fr) !important;
+      align-items: center !important;
+      gap: 8px 12px !important;
+    }
+
+    .cardBackImageRow label {
+      min-width: 72px !important;
+      white-space: nowrap !important;
+      z-index: 1 !important;
+    }
+
+    .cardBackImageRow input[type="file"] {
+      min-width: 0 !important;
+      width: min(100%, 158px) !important;
+      max-width: 158px !important;
+      font-size: .58rem !important;
+    }
+
+    @media (max-height:650px) {
+      .photoInputPreview { width: 54px !important; height: 76px !important; flex-basis: 54px !important; }
+      .cardBackImageRow input[type="file"] { max-width: 138px !important; }
+    }
+
+
     .settingsTabs {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1319,6 +1485,7 @@
     .cardBackThumb[data-style="mix-green-black"] { background: conic-gradient(from 0deg at 50% 50%, #156f4a, #111, #156f4a); }
     .cardBackThumb[data-style="mix-green-blue"] { background: conic-gradient(from 0deg at 50% 50%, #156f4a, #1e4e8c, #156f4a); }
     .cardBackThumb[data-style="custom-solid"] { background: linear-gradient(180deg, var(--custom-card-back), color-mix(in srgb, var(--custom-card-back) 62%, black)); }
+    .cardBackThumb[data-style="custom-image"] { background-color:#111; background-image: var(--custom-card-image), linear-gradient(180deg,#222,#111); background-size: cover; background-position: center; }
 
     .feltPresetGrid {
       display: flex;
@@ -3451,7 +3618,199 @@
       .opponent { grid-template-rows: 13px minmax(0, 1fr); grid-template-columns: 18px minmax(0, 1fr) 18px; }
       .drawerMenuBtn { min-height: 44px; }
     }
-  </style>
+  
+
+    .hidden { display: none !important; }
+
+    /* App update system */
+    .drawerHome.active {
+      min-height: 100%;
+      height: 100%;
+      display: flex !important;
+      flex-direction: column;
+    }
+
+    .drawerHome.active .drawerMenu {
+      flex: 0 0 auto;
+    }
+
+    .drawerInlineUpdate {
+      flex: 0 0 auto;
+      margin-top: 0;
+      padding-top: 8px;
+    }
+
+    .drawerInlineUpdate:not(.collapsed) {
+      margin-top: auto;
+    }
+
+    .drawerInlineUpdate.collapsed {
+      display: none !important;
+    }
+
+    .drawerInlineUpdate .sectionBox {
+      margin: 0 0 8px;
+    }
+
+    .drawerInlineUpdate h3 {
+      font-size: 0.72rem;
+      margin-bottom: 5px;
+    }
+
+    .drawerInlineUpdate p {
+      margin: 0;
+      font-size: 0.74rem;
+      line-height: 1.28;
+    }
+
+    .updateFresh { color: #bff7d4 !important; }
+    .updateStale { color: #ffd0d0 !important; }
+
+    .updateBtnGrid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 7px;
+      margin-top: 8px;
+    }
+
+    .updateBtnGrid .primaryUpdateBtn {
+      color: #171100;
+      background: linear-gradient(180deg, rgba(240,202,104,0.98), rgba(240,202,104,0.78));
+      border-color: rgba(240,202,104,0.72);
+    }
+
+    .drawerFooterTools {
+      flex: 0 0 auto;
+      display: flex;
+      justify-content: center;
+      padding: 6px 2px 0;
+      margin-top: 0;
+    }
+
+    .drawerInlineUpdate.collapsed + .drawerFooterTools {
+      margin-top: auto;
+    }
+
+    .drawerVersionBadge {
+      position: relative;
+      border: 0;
+      background: transparent;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .drawerVersionBadge strong {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 54px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.34);
+      border: 1px solid rgba(240,202,104,0.28);
+      color: var(--gold);
+      font-size: 0.68rem;
+      font-weight: 1000;
+      letter-spacing: 0.08em;
+      line-height: 1;
+    }
+
+    .drawerVersionBadge.updateAvailable strong {
+      border-color: rgba(255, 92, 92, 0.74);
+      box-shadow: 0 0 0 2px rgba(255,92,92,0.10), 0 0 12px rgba(255,92,92,0.22);
+      animation: versionUpdatePulse 1450ms ease-in-out infinite;
+    }
+
+    .versionUpdateDot {
+      position: absolute;
+      top: -3px;
+      right: -3px;
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: #ff5c5c;
+      box-shadow: 0 0 8px rgba(255,92,92,0.88);
+      display: none;
+    }
+
+    .drawerVersionBadge.updateAvailable .versionUpdateDot {
+      display: block;
+    }
+
+    @keyframes versionUpdatePulse {
+      0%, 100% { box-shadow: 0 0 0 2px rgba(255,92,92,0.08), 0 0 10px rgba(255,92,92,0.18); }
+      50% { box-shadow: 0 0 0 3px rgba(255,92,92,0.16), 0 0 17px rgba(255,92,92,0.34); }
+    }
+
+    .updateBanner {
+      position: fixed;
+      z-index: 9000;
+      left: 50%;
+      bottom: calc(14px + var(--safe-bottom));
+      transform: translateX(-50%);
+      width: min(94vw, 390px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 11px;
+      border-radius: 16px;
+      border: 1px solid rgba(240,202,104,0.34);
+      background: linear-gradient(180deg, rgba(20, 31, 39, 0.98), rgba(6, 10, 13, 0.98));
+      box-shadow: 0 16px 38px rgba(0,0,0,0.48), 0 0 18px rgba(240,202,104,0.12);
+      color: #eefbff;
+    }
+
+    .updateBanner.hidden {
+      display: none !important;
+    }
+
+    .updateBannerText {
+      min-width: 0;
+    }
+
+    .updateBannerText strong {
+      display: block;
+      color: var(--gold);
+      font-size: 0.75rem;
+      font-weight: 1000;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .updateBannerText span {
+      display: block;
+      color: #e2eef3;
+      font-size: 0.73rem;
+      font-weight: 850;
+      line-height: 1.18;
+      margin-top: 2px;
+    }
+
+    .updateBannerActions {
+      display: flex;
+      gap: 6px;
+      flex: 0 0 auto;
+    }
+
+    .updateBannerActions button {
+      min-height: 31px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.18);
+      padding: 5px 8px;
+      font-size: 0.68rem;
+      font-weight: 1000;
+      color: #fff;
+      background: rgba(255,255,255,0.08);
+    }
+
+    .updateBannerActions .updateNowBtn {
+      background: linear-gradient(180deg, rgba(240,202,104,0.98), rgba(240,202,104,0.78));
+      border-color: rgba(255,255,255,0.42);
+      color: #171100;
+    }
+
+</style>
 </head>
 <body class="face-light splash-active" data-cardback="classic">
   <main class="app" id="app" aria-label="Tens mobile compact board">
@@ -3533,6 +3892,19 @@
             <button class="drawerMenuBtn" id="startNewGameMenuBtn" type="button">Start New Game <small>deal fresh cards</small></button>
             <button class="drawerMenuBtn" data-page="rulesPage">Rules <small>how to play</small></button>
           </nav>
+          <div class="drawerInlineUpdate collapsed" id="drawerInlineUpdate" aria-live="polite">
+            <div class="sectionBox updateMainBox">
+              <h3>App update</h3>
+              <p id="updateStatusText">Current: v127. Latest: unknown.</p>
+              <div class="updateBtnGrid">
+                <button class="miniBtn" id="checkUpdateBtn" type="button">Check for update</button>
+                <button class="miniBtn primaryUpdateBtn hidden" id="forceLatestBtn" type="button">Apply update</button>
+              </div>
+            </div>
+          </div>
+          <div class="drawerFooterTools">
+            <button class="drawerVersionBadge" id="versionPillBtn" type="button" aria-label="App update and version"><strong id="versionLabel">v127</strong><span class="versionUpdateDot" aria-hidden="true"></span></button>
+          </div>
         </div>
 
         <section class="subpage" id="hintPage">
@@ -3575,12 +3947,10 @@
             <div class="sectionBox collapsible">
               <button class="sectionHeader" type="button" data-collapse-target="appearanceSettingsContent"><span>Theme / Appearance</span><span class="chevron">⌄</span></button>
               <div class="sectionContent" id="appearanceSettingsContent">
-                <div class="controlRow">
-                  <span class="controlLabel">Card faces</span>
-                  <div class="segmented">
-                    <button class="segBtn active" data-face="light">Light</button>
-                    <button class="segBtn" data-face="dark">Dark</button>
-                  </div>
+                <div class="controlRow faceChoiceRow"><div><label>Card faces</label></div><select id="faceSelect" class="hiddenFaceSelect" aria-hidden="true" tabindex="-1"><option value="light">Light</option><option value="dark">Dark</option></select></div>
+                <div class="faceChoiceGallery" id="faceChoiceGallery" aria-label="Card face options">
+                  <button class="faceOption active" type="button" data-facechoice="light" aria-label="Use light card faces"><div class="facePreviewCard light"><div class="fpCorner">A<span class="fpSuit">♠</span></div><div class="fpCenter">♠</div></div><span>Light</span></button>
+                  <button class="faceOption" type="button" data-facechoice="dark" aria-label="Use dark card faces"><div class="facePreviewCard dark"><div class="fpCorner">A<span class="fpSuit">♠</span></div><div class="fpCenter">♠</div></div><span>Dark</span></button>
                 </div>
                 <p class="smallHelp">Choose the card face, card back, and table felt. These settings are saved.</p>
 
@@ -3602,11 +3972,13 @@
                       <button class="cardBackOption" type="button" data-backstyle="mix-green-black"><div class="cardBackThumb" data-style="mix-green-black"></div><span>Green/Black</span></button>
                       <button class="cardBackOption" type="button" data-backstyle="mix-green-blue"><div class="cardBackThumb" data-style="mix-green-blue"></div><span>Green/Blue</span></button>
                       <button class="cardBackOption" type="button" data-backstyle="custom-solid"><div class="cardBackThumb" data-style="custom-solid"></div><span>Custom</span></button>
+                      <button class="cardBackOption" type="button" data-backstyle="custom-image"><div class="cardBackThumb" data-style="custom-image"></div><span>Photo</span></button>
                     </div>
                     <div class="controlRow">
                       <label for="customCardBack">Custom back color</label>
                       <input type="color" id="customCardBack" value="#1e4e8c" />
                     </div>
+                    <div class="controlRow cardBackImageRow"><label for="customCardImage">Photo back</label><div class="photoBackPicker"><div class="cardBackThumb photoInputPreview" data-style="custom-image" aria-hidden="true"></div><input id="customCardImage" type="file" accept="image/*" /></div></div>
                   </div>
                 </div>
 
@@ -3848,6 +4220,17 @@
 
   <div class="toast" id="toast"></div>
 
+  <div class="updateBanner hidden" id="updateToast" role="status" aria-live="polite">
+    <div class="updateBannerText">
+      <strong>Update available</strong>
+      <span id="updateToastText">Update available: v127</span>
+    </div>
+    <div class="updateBannerActions">
+      <button class="updateNowBtn" id="updateToastNow" type="button">Apply update</button>
+      <button id="updateToastLater" type="button">Later</button>
+    </div>
+  </div>
+
   <script>
     const CARD_RATIO = 1.42;
     const GAP = 3;
@@ -3857,6 +4240,8 @@
     const DISPLAY_RVAL = { A: 14, K: 13, Q: 12, J: 11, '10': 10, '9': 9, '8': 8, '7': 7, '6': 6, '5': 5, '4': 4, '3': 3, '2': 2 };
     const suitOrder = ['♣', '♦', '♥', '♠'];
     const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+    const APP_VERSION = 'v127';
+    const UPDATE_CACHE_PREFIXES = ['tens-static-', 'tens-runtime-'];
     const AI_STEP_MS = 520;
     const AI_CLEAR_MS = 310;
     const CARD_TO_LIVE_MS = 610;
@@ -3866,11 +4251,17 @@
     const TRAINER_KEY = 'tens_mobile_wired_trainer_v1';
     const GAME_KEY = 'tens_mobile_wired_game_v1';
     let gameProgressSaveTimer = null;
+    let updateCheckTimer = null;
+    let latestRemoteVersion = '';
+    let updateIsAvailable = false;
+    let applyingUpdateNow = false;
+    let lastAutoUpdateCheck = 0;
+    let dismissedUpdateVersion = null;
 
     const state = {
       aiCount: 4,
       difficulty: 'Adaptive',
-      appearance: { cardBack: 'classic', customCardBack: '#1e4e8c', felt: '#0a5a3c', feltDeep: '#084a33', turnBorderStyle: 'racer', turnBorderPreset: 'gold', turnBorderPreset2: 'blue', turnBorderColor: '#f0ca68' },
+      appearance: { face: 'light', cardBack: 'classic', customCardBack: '#1e4e8c', customCardImage: '', felt: '#0a5a3c', feltDeep: '#084a33', turnBorderStyle: 'racer', turnBorderPreset: 'gold', turnBorderPreset2: 'blue', turnBorderColor: '#f0ca68' },
       selectedCardId: null,
       toggles: {
         autoPlay: true,
@@ -3992,14 +4383,27 @@
       newGameCancelBtn: document.getElementById('newGameCancelBtn'),
       newGameCancelX: document.getElementById('newGameCancelX'),
       newGameConfirmBtn: document.getElementById('newGameConfirmBtn'),
+      faceSelect: document.getElementById('faceSelect'),
+      faceChoiceGallery: document.getElementById('faceChoiceGallery'),
       customCardBack: document.getElementById('customCardBack'),
+      customCardImage: document.getElementById('customCardImage'),
       customFelt: document.getElementById('customFelt'),
       turnBorderStyle: document.getElementById('turnBorderStyle'),
       turnBorderPreset: document.getElementById('turnBorderPreset'),
       turnBorderPreset2: document.getElementById('turnBorderPreset2'),
       turnBorderColor: document.getElementById('turnBorderColor'),
       resetTurnBorderColor: document.getElementById('resetTurnBorderColor'),
-      turnBorderSummary: document.getElementById('turnBorderSummary')
+      turnBorderSummary: document.getElementById('turnBorderSummary'),
+      versionLabel: document.getElementById('versionLabel'),
+      versionPillBtn: document.getElementById('versionPillBtn'),
+      drawerInlineUpdate: document.getElementById('drawerInlineUpdate'),
+      updateStatusText: document.getElementById('updateStatusText'),
+      checkUpdateBtn: document.getElementById('checkUpdateBtn'),
+      forceLatestBtn: document.getElementById('forceLatestBtn'),
+      updateToast: document.getElementById('updateToast'),
+      updateToastText: document.getElementById('updateToastText'),
+      updateToastNow: document.getElementById('updateToastNow'),
+      updateToastLater: document.getElementById('updateToastLater')
     };
 
     function freshTrainer() {
@@ -4135,7 +4539,9 @@
         if (typeof saved.showSuits === 'boolean') state.toggles.showSuits = saved.showSuits;
         if (typeof saved.showHint === 'boolean') state.toggles.showHint = saved.showHint;
         if (saved.clearAnimation && el.clearAnimation) el.clearAnimation.value = saved.clearAnimation;
+        if (saved.face) setFace(saved.face);
         if (saved.customCardBack) setCustomCardBack(saved.customCardBack);
+        if (saved.customCardImage) setCustomCardImage(saved.customCardImage);
         if (saved.cardBack) setBack(saved.cardBack);
         if (saved.felt) setFelt(saved.felt, saved.feltDeep || makeDarkerColor(saved.felt));
         setTurnBorderAppearance(saved.turnBorderStyle || state.appearance.turnBorderStyle, saved.turnBorderColor || state.appearance.turnBorderColor, saved.turnBorderPreset || state.appearance.turnBorderPreset, saved.turnBorderPreset2 || state.appearance.turnBorderPreset2);
@@ -4143,7 +4549,9 @@
         if (el.difficultySelect) el.difficultySelect.value = state.difficulty;
       }
       if (!document.body.dataset.cardback) setBack(state.appearance.cardBack);
+      setFace(state.appearance.face);
       setCustomCardBack(state.appearance.customCardBack);
+      setCustomCardImage(state.appearance.customCardImage);
       setFelt(state.appearance.felt, state.appearance.feltDeep);
       setTurnBorderAppearance(state.appearance.turnBorderStyle, state.appearance.turnBorderColor, state.appearance.turnBorderPreset, state.appearance.turnBorderPreset2);
       if (state.toggles.pileInlineLog && state.toggles.pileInlineScores) state.toggles.pileInlineScores = false;
@@ -4164,8 +4572,10 @@
           showSuits: !!state.toggles.showSuits,
           showHint: !!state.toggles.showHint,
           clearAnimation: el.clearAnimation ? el.clearAnimation.value : 'Explode',
+          face: state.appearance.face,
           cardBack: state.appearance.cardBack,
           customCardBack: state.appearance.customCardBack,
+          customCardImage: state.appearance.customCardImage,
           felt: state.appearance.felt,
           feltDeep: state.appearance.feltDeep,
           turnBorderStyle: state.appearance.turnBorderStyle,
@@ -8220,9 +8630,13 @@
     }
 
     function setFace(face) {
-      document.body.classList.toggle('face-light', face === 'light');
-      document.body.classList.toggle('face-dark', face === 'dark');
-      document.querySelectorAll('[data-face]').forEach(btn => btn.classList.toggle('active', btn.dataset.face === face));
+      const next = face === 'dark' ? 'dark' : 'light';
+      state.appearance.face = next;
+      document.body.classList.toggle('face-light', next === 'light');
+      document.body.classList.toggle('face-dark', next === 'dark');
+      if (el.faceSelect) el.faceSelect.value = next;
+      document.querySelectorAll('[data-face]').forEach(btn => btn.classList.toggle('active', btn.dataset.face === next));
+      document.querySelectorAll('[data-facechoice]').forEach(btn => btn.classList.toggle('active', btn.dataset.facechoice === next));
     }
 
     function makeDarkerColor(color) {
@@ -8239,8 +8653,64 @@
       if (el.customCardBack) el.customCardBack.value = safe;
     }
 
+    function setCustomCardImage(dataUrl) {
+      const safe = typeof dataUrl === 'string' && dataUrl.startsWith('data:image/') ? dataUrl : '';
+      state.appearance.customCardImage = safe;
+      document.documentElement.style.setProperty('--custom-card-image', safe ? `url("${safe}")` : 'linear-gradient(180deg,#222,#111)');
+    }
+
+    function handleCustomCardImage(event) {
+      const file = event?.target?.files?.[0];
+      if (!file) return;
+      if (!file.type || !file.type.startsWith('image/')) {
+        toast('Choose an image file.');
+        event.target.value = '';
+        return;
+      }
+      const reader = new FileReader();
+      reader.onerror = () => toast('Could not read that image.');
+      reader.onload = () => compressCustomCardImage(reader.result)
+        .then(dataUrl => {
+          setCustomCardImage(dataUrl);
+          setBack('custom-image');
+          savePrefs();
+          renderAll();
+          toast('Photo card back applied.');
+        })
+        .catch(() => toast('Could not use that image.'));
+      reader.readAsDataURL(file);
+    }
+
+    function compressCustomCardImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const w = 300;
+            const h = 420;
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) throw new Error('No canvas context');
+            ctx.fillStyle = '#111';
+            ctx.fillRect(0, 0, w, h);
+            const scale = Math.max(w / img.naturalWidth, h / img.naturalHeight);
+            const sw = w / scale;
+            const sh = h / scale;
+            const sx = (img.naturalWidth - sw) / 2;
+            const sy = (img.naturalHeight - sh) / 2;
+            ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', 0.82));
+          } catch (err) { reject(err); }
+        };
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
     function setBack(style) {
-      const valid = new Set(['classic', 'blueflame', 'wave', 'solid-blue', 'solid-red', 'solid-black', 'solid-green', 'mix-red-blue', 'mix-blue-black', 'mix-red-black', 'mix-red-green', 'mix-green-black', 'mix-green-blue', 'custom-solid']);
+      const valid = new Set(['classic', 'blueflame', 'wave', 'solid-blue', 'solid-red', 'solid-black', 'solid-green', 'mix-red-blue', 'mix-blue-black', 'mix-red-black', 'mix-red-green', 'mix-green-black', 'mix-green-blue', 'custom-solid', 'custom-image']);
       const next = valid.has(style) ? style : 'classic';
       ['stars', 'stripes', 'diamonds'].forEach(name => document.body.classList.remove(`back-${name}`));
       document.body.dataset.cardback = next;
@@ -8251,7 +8721,8 @@
         'solid-blue': 'Blue', 'solid-red': 'Red', 'solid-black': 'Black', 'solid-green': 'Green',
         'mix-red-blue': 'Red/Blue', 'mix-blue-black': 'Blue/Black', 'mix-red-black': 'Red/Black',
         'mix-red-green': 'Red/Green', 'mix-green-black': 'Green/Black', 'mix-green-blue': 'Green/Blue',
-        'custom-solid': 'Custom'
+        'custom-solid': 'Custom',
+        'custom-image': 'Photo'
       };
       const summary = document.getElementById('cardBackSummary');
       if (summary) summary.textContent = labelMap[next] || 'Classic';
@@ -8692,12 +9163,178 @@
       zone.addEventListener('touchcancel', finishSwipe, { passive: true });
     }
 
+    function normalizeVersion(version) {
+      return String(version || '').trim().replace(/^v/i, '').split(/[+\s]/)[0];
+    }
+
+    function displayVersion(version) {
+      const parts = normalizeVersion(version).split('.').filter(Boolean);
+      while (parts.length > 1 && parts[parts.length - 1] === '0') parts.pop();
+      return parts.join('.') || normalizeVersion(version) || '0';
+    }
+
+    function currentVersionText() {
+      return normalizeVersion(APP_VERSION);
+    }
+
+    function currentVersionDisplay() {
+      return displayVersion(APP_VERSION);
+    }
+
+    function compareVersions(a, b) {
+      const left = normalizeVersion(a).split('.').map(part => parseInt(part, 10)).map(num => Number.isFinite(num) ? num : 0);
+      const right = normalizeVersion(b).split('.').map(part => parseInt(part, 10)).map(num => Number.isFinite(num) ? num : 0);
+      const length = Math.max(left.length, right.length, 1);
+      for (let index = 0; index < length; index += 1) {
+        const diff = (left[index] || 0) - (right[index] || 0);
+        if (diff) return diff;
+      }
+      return 0;
+    }
+
+    function setUpdateStatus(message = '', kind = '') {
+      if (!el.updateStatusText) return;
+      const latestText = latestRemoteVersion ? `Latest: v${displayVersion(latestRemoteVersion)}.` : 'Latest: unknown.';
+      el.updateStatusText.textContent = `Current: v${currentVersionDisplay()}. ${latestText}${message ? ` ${message}` : ''}`;
+      el.updateStatusText.classList.toggle('updateFresh', kind === 'fresh');
+      el.updateStatusText.classList.toggle('updateStale', kind === 'stale');
+      el.forceLatestBtn?.classList.toggle('hidden', kind !== 'stale');
+    }
+
+    function setUpdateAvailable(remote = '') {
+      latestRemoteVersion = remote || '';
+      updateIsAvailable = !!remote && compareVersions(remote, currentVersionText()) > 0;
+      el.versionPillBtn?.classList.toggle('updateAvailable', updateIsAvailable);
+      el.forceLatestBtn?.classList.toggle('hidden', !updateIsAvailable);
+      if (el.versionPillBtn) {
+        el.versionPillBtn.setAttribute('aria-label', updateIsAvailable ? `App update available: v${displayVersion(latestRemoteVersion)}` : `Tens v${currentVersionDisplay()}. App update`);
+        el.versionPillBtn.title = updateIsAvailable ? `Update available: v${displayVersion(latestRemoteVersion)}` : `Tens v${currentVersionDisplay()}`;
+      }
+    }
+
+    async function fetchRemoteVersion() {
+      const response = await fetch(`./version.json?ts=${Date.now()}`, { cache: 'no-store' });
+      if (!response.ok) throw new Error('Version check failed');
+      const data = await response.json();
+      return normalizeVersion(data.label || data.version || data.appVersion || data.build);
+    }
+
+    function showUpdatePrompt(remote) {
+      if (!remote || compareVersions(remote, currentVersionText()) <= 0) return;
+      if (dismissedUpdateVersion === remote) return;
+      if (!el.updateToast) return;
+      if (el.updateToastText) el.updateToastText.textContent = `Update available: v${displayVersion(remote)}`;
+      el.updateToast.classList.remove('hidden');
+    }
+
+    function dismissUpdatePrompt() {
+      dismissedUpdateVersion = latestRemoteVersion || dismissedUpdateVersion;
+      el.updateToast?.classList.add('hidden');
+    }
+
+    async function checkForUpdate({ quiet = false, auto = false } = {}) {
+      if (!auto) setUpdateStatus('Checking for updates…');
+      lastAutoUpdateCheck = Date.now();
+      try {
+        const remote = await fetchRemoteVersion();
+        const current = currentVersionText();
+        if (remote && compareVersions(remote, current) > 0) {
+          setUpdateAvailable(remote);
+          setUpdateStatus('Update available.', 'stale');
+          showUpdatePrompt(remote);
+          if (!quiet && !auto) toast(`Update available: v${displayVersion(remote)}`);
+          return true;
+        }
+        setUpdateAvailable(remote || '');
+        setUpdateStatus('You are up to date.', 'fresh');
+        el.updateToast?.classList.add('hidden');
+        if (!quiet && !auto) toast('Tens is up to date.');
+        return false;
+      } catch (err) {
+        if (!auto) setUpdateStatus('Could not check right now. Try again in a moment.');
+        if (!quiet && !auto) toast('Update check failed.');
+        return false;
+      }
+    }
+
+    async function clearTensCaches() {
+      if (!('caches' in window)) return;
+      const keys = await caches.keys();
+      await Promise.all(keys.filter(key => UPDATE_CACHE_PREFIXES.some(prefix => key.startsWith(prefix))).map(key => caches.delete(key)));
+    }
+
+    async function forceLatestVersion() {
+      applyingUpdateNow = true;
+      setUpdateStatus('Applying update…', 'stale');
+      try {
+        const registration = await navigator.serviceWorker?.getRegistration?.();
+        await registration?.update?.();
+        const freshRegistration = await navigator.serviceWorker?.getRegistration?.();
+        if (freshRegistration?.waiting) freshRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
+        await clearTensCaches();
+      } catch (err) {}
+      const path = window.location.pathname || './';
+      window.location.replace(`${path}?refresh=${Date.now()}`);
+    }
+
+    function toggleInlineUpdatePanel() {
+      el.drawerInlineUpdate?.classList.toggle('collapsed');
+      el.drawer?.classList.add('open');
+      if (!el.drawerInlineUpdate?.classList.contains('collapsed')) setTimeout(() => checkForUpdate({ quiet: true }), 80);
+    }
+
+    function startAutomaticUpdateChecks() {
+      setTimeout(() => checkForUpdate({ quiet: true, auto: true }), 1500);
+      if (updateCheckTimer) clearInterval(updateCheckTimer);
+      updateCheckTimer = setInterval(() => checkForUpdate({ quiet: true, auto: true }), 12 * 60 * 1000);
+      const checkOnResume = () => {
+        if (document.visibilityState && document.visibilityState !== 'visible') return;
+        if (Date.now() - lastAutoUpdateCheck > 60 * 1000) checkForUpdate({ quiet: true, auto: true });
+      };
+      document.addEventListener('visibilitychange', checkOnResume);
+      window.addEventListener('focus', checkOnResume);
+      window.addEventListener('pageshow', checkOnResume);
+    }
+
+    function wireServiceWorkerUpdates() {
+      if (!('serviceWorker' in navigator)) return;
+      let reloading = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!applyingUpdateNow) return;
+        if (reloading) return;
+        reloading = true;
+        window.location.reload();
+      });
+      navigator.serviceWorker.getRegistration?.().then(registration => {
+        if (!registration) return;
+        if (registration.waiting) {
+          setUpdateStatus('Update ready.', 'stale');
+          checkForUpdate({ quiet: true, auto: true });
+        }
+        registration.addEventListener('updatefound', () => {
+          const worker = registration.installing;
+          if (!worker) return;
+          worker.addEventListener('statechange', () => {
+            if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+              setUpdateStatus('Update ready.', 'stale');
+              checkForUpdate({ quiet: true, auto: true });
+            }
+          });
+        });
+      }).catch(() => {});
+    }
+
     function bindEvents() {
       const on = (node, type, handler, options) => {
         if (node && typeof node.addEventListener === 'function') node.addEventListener(type, handler, options);
       };
       on(el.drawerTab, 'click', () => el.drawer?.classList.toggle('open'));
       on(el.closeDrawer, 'click', () => el.drawer?.classList.remove('open'));
+      on(el.versionPillBtn, 'click', toggleInlineUpdatePanel);
+      on(el.checkUpdateBtn, 'click', () => checkForUpdate());
+      on(el.forceLatestBtn, 'click', forceLatestVersion);
+      on(el.updateToastNow, 'click', forceLatestVersion);
+      on(el.updateToastLater, 'click', dismissUpdatePrompt);
       document.querySelectorAll('[data-page]').forEach(btn => btn.addEventListener('click', () => showPage(btn.dataset.page)));
       if (el.startNewGameMenuBtn) el.startNewGameMenuBtn.addEventListener('click', openNewGameConfirm);
       if (el.splashStartBtn) el.splashStartBtn.addEventListener('click', openNewGameConfirm);
@@ -8712,11 +9349,14 @@
       document.querySelectorAll('[data-back]').forEach(btn => btn.addEventListener('click', showHome));
       document.querySelectorAll('[data-settings-tab]').forEach(btn => btn.addEventListener('click', () => activateSettingsTab(btn.dataset.settingsTab)));
       document.querySelectorAll('[data-collapse-target]').forEach(btn => btn.addEventListener('click', () => toggleSectionContent(btn.dataset.collapseTarget)));
-      document.querySelectorAll('[data-face]').forEach(btn => btn.addEventListener('click', () => setFace(btn.dataset.face)));
+      if (el.faceSelect) el.faceSelect.addEventListener('change', event => { setFace(event.target.value); savePrefs(); renderAll(); });
+      document.querySelectorAll('[data-facechoice]').forEach(btn => btn.addEventListener('click', () => { setFace(btn.dataset.facechoice); savePrefs(); renderAll(); }));
+      document.querySelectorAll('[data-face]').forEach(btn => btn.addEventListener('click', () => { setFace(btn.dataset.face); savePrefs(); renderAll(); }));
       document.querySelectorAll('[data-backstyle]').forEach(btn => btn.addEventListener('click', () => { setBack(btn.dataset.backstyle); savePrefs(); }));
       document.querySelectorAll('[data-felt]').forEach(btn => btn.addEventListener('click', () => { setFelt(btn.dataset.felt, btn.dataset.feltDeep || makeDarkerColor(btn.dataset.felt)); savePrefs(); }));
       if (el.customFelt) el.customFelt.addEventListener('input', event => { setFelt(event.target.value, makeDarkerColor(event.target.value)); savePrefs(); });
-      if (el.customCardBack) el.customCardBack.addEventListener('input', event => { setCustomCardBack(event.target.value); setBack('custom-solid'); savePrefs(); });
+      if (el.customCardBack) el.customCardBack.addEventListener('input', event => { setCustomCardBack(event.target.value); setBack('custom-solid'); savePrefs(); renderAll(); });
+      if (el.customCardImage) el.customCardImage.addEventListener('change', handleCustomCardImage);
       if (el.turnBorderStyle) el.turnBorderStyle.addEventListener('change', event => { setTurnBorderAppearance(event.target.value, state.appearance.turnBorderColor, state.appearance.turnBorderPreset, state.appearance.turnBorderPreset2); savePrefs(); renderAll(); });
       if (el.turnBorderPreset) el.turnBorderPreset.addEventListener('change', event => {
         const preset = event.target.value;
@@ -8816,6 +9456,11 @@
     setAiCountForNextGame(state.aiCount);
     renderDifficultyDescriptions();
     refreshSplashHome();
+    if (el.versionLabel) el.versionLabel.textContent = 'v127';
+    setUpdateAvailable('');
+    setUpdateStatus('Tap Check for update.');
+    wireServiceWorkerUpdates();
+    startAutomaticUpdateChecks();
 
     // PWA: load the manifest/service worker only on supported protocols.
     const pwaCanLoadManifest = location.protocol === 'https:' || location.protocol === 'http:';
