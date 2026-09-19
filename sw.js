@@ -1,5 +1,5 @@
 // sw.js — Tens smart cache with update-friendly network-first files
-const CACHE_VERSION = 'v130';
+const CACHE_VERSION = 'v131';
 const STATIC_CACHE = `tens-static-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `tens-runtime-${CACHE_VERSION}`;
 

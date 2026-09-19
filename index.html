@@ -87,7 +87,7 @@
       width: min(100vw, var(--mobile-board-max));
       /* Center without a transform: Safari need not rasterize the entire board as a scaled layer. */
       display: grid;
-      grid-template-rows: 27fr 30fr 12fr 31fr;
+      grid-template-rows: minmax(0,27fr) minmax(0,30fr) minmax(0,12fr) minmax(0,31fr) 22px;
       gap: var(--gap);
       padding: calc(3px + var(--safe-top)) 3px calc(3px + var(--safe-bottom)) 3px;
       background:
@@ -834,11 +834,18 @@
       left: calc(var(--hand-stack-step, 0px) * var(--stack-i, 0));
     }
 
+    /* Keep the points below the hand panel, outside its card and turn UI. */
+    .handPointsFooter {
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     .handPointsBadge {
-      position: absolute;
-      top: 3px;
-      right: 5px;
-      z-index: 5;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       pointer-events: none;
       padding: 3px 7px;
       border-radius: 999px;
@@ -3647,7 +3654,7 @@
     }
 
     @media (max-height: 690px) {
-      .app { grid-template-rows: 26fr 31fr 12fr 31fr; }
+      .app { grid-template-rows: minmax(0,26fr) minmax(0,31fr) minmax(0,12fr) minmax(0,31fr) 22px; }
       .opponent { grid-template-rows: 13px minmax(0, 1fr); grid-template-columns: 18px minmax(0, 1fr) 18px; }
       .drawerMenuBtn { min-height: 44px; }
     }
@@ -3875,7 +3882,6 @@
     </section>
 
     <section class="panel handPanel" id="handPanel" aria-label="My hand">
-      <div class="handPointsBadge" id="handPointsBadge" role="status" aria-label="Visible cards: 0 points" title="Hand + face-up table cards; face-down cards are excluded">VISIBLE · 0 PTS</div>
       <div class="handScroller" id="handScroller">
         <div class="handGrid" id="handGrid"></div>
       </div>
@@ -3884,6 +3890,9 @@
         <span id="handScrollBadge">no hand scroll</span>
       </div>
     </section>
+    <div class="handPointsFooter">
+      <div class="handPointsBadge" id="handPointsBadge" role="status" aria-label="Hand and face-up table: 0 points. Face-down cards excluded." title="Hand + face-up table cards; face-down cards are excluded">0 PTS</div>
+    </div>
   </main>
 
   <div class="splashOverlay" id="splashOverlay" aria-label="Tens home screen">
@@ -3937,7 +3946,7 @@
             </div>
           </div>
           <div class="drawerFooterTools">
-            <button class="drawerVersionBadge" id="versionPillBtn" type="button" aria-label="App update and version"><strong id="versionLabel">v130</strong><span class="versionUpdateDot" aria-hidden="true"></span></button>
+            <button class="drawerVersionBadge" id="versionPillBtn" type="button" aria-label="App update and version"><strong id="versionLabel">v131</strong><span class="versionUpdateDot" aria-hidden="true"></span></button>
           </div>
         </div>
 
@@ -4274,7 +4283,7 @@
     const DISPLAY_RVAL = { A: 14, K: 13, Q: 12, J: 11, '10': 10, '9': 9, '8': 8, '7': 7, '6': 6, '5': 5, '4': 4, '3': 3, '2': 2 };
     const suitOrder = ['♣', '♦', '♥', '♠'];
     const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-    const APP_VERSION = 'v130';
+    const APP_VERSION = 'v131';
     const UPDATE_CACHE_PREFIXES = ['tens-static-', 'tens-runtime-'];
     const AI_STEP_MS = 520;
     const AI_CLEAR_MS = 310;
@@ -6702,7 +6711,7 @@
         ? previewHandIds.reduce((sum, id) => sum + cardPoints(id), 0)
           + human.stacks.reduce((sum, stack) => sum + (stack.up ? cardPoints(stack.up) : 0), 0)
         : totalVisiblePoints(game, 0);
-      el.handPointsBadge.textContent = `VISIBLE · ${points} PTS`;
+      el.handPointsBadge.textContent = `${points} PTS`;
       el.handPointsBadge.setAttribute('aria-label', `Hand and face-up table: ${points} points. Face-down cards excluded.`);
     }
 
@@ -9571,7 +9580,7 @@
     setAiCountForNextGame(state.aiCount);
     renderDifficultyDescriptions();
     refreshSplashHome();
-    if (el.versionLabel) el.versionLabel.textContent = 'v130';
+    if (el.versionLabel) el.versionLabel.textContent = 'v131';
     setUpdateAvailable('');
     setUpdateStatus('Tap Check for update.');
     wireServiceWorkerUpdates();
