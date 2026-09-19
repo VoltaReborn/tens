@@ -81,9 +81,11 @@
       position: fixed;
       top: 0;
       bottom: 0;
-      left: 50%;
+      left: 0;
+      right: 0;
+      margin-inline: auto;
       width: min(100vw, var(--mobile-board-max));
-      transform: translateX(-50%);
+      /* Center without a transform: Safari need not rasterize the entire board as a scaled layer. */
       display: grid;
       grid-template-rows: 27fr 30fr 12fr 31fr;
       gap: var(--gap);
@@ -178,7 +180,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
       color: #ffffff;
-      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+      text-shadow: 0 1px 1px rgba(0,0,0,0.82);
     }
 
     .handPill {
@@ -196,7 +198,7 @@
       letter-spacing: 0.02em;
       box-shadow: 0 0 0 1px rgba(240,202,104,0.12), 0 2px 7px rgba(0,0,0,0.44), 0 0 8px rgba(240,202,104,0.30);
       white-space: nowrap;
-      backdrop-filter: blur(2px);
+      /* The pill already has an opaque background; backdrop blur softens small text on iOS. */
     }
 
     .scorePill {
@@ -818,6 +820,25 @@
       --card-w: var(--hand-card-w);
       --card-h: var(--hand-card-h);
       left: calc(var(--hand-stack-step, 0px) * var(--stack-i, 0));
+    }
+
+    .handPointsBadge {
+      position: absolute;
+      top: 3px;
+      right: 5px;
+      z-index: 5;
+      pointer-events: none;
+      padding: 3px 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(240,202,104,0.45);
+      background: rgba(7, 13, 17, 0.94);
+      color: #fff2c8;
+      font-size: clamp(0.58rem, 2vw, 0.68rem);
+      font-weight: 900;
+      line-height: 1.1;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+      font-variant-numeric: tabular-nums;
     }
 
     .handMeta {
@@ -3842,6 +3863,7 @@
     </section>
 
     <section class="panel handPanel" id="handPanel" aria-label="My hand">
+      <div class="handPointsBadge" id="handPointsBadge" role="status" aria-label="Visible cards: 0 points" title="Hand + face-up table cards; face-down cards are excluded">VISIBLE · 0 PTS</div>
       <div class="handScroller" id="handScroller">
         <div class="handGrid" id="handGrid"></div>
       </div>
@@ -3895,7 +3917,7 @@
           <div class="drawerInlineUpdate collapsed" id="drawerInlineUpdate" aria-live="polite">
             <div class="sectionBox updateMainBox">
               <h3>App update</h3>
-              <p id="updateStatusText">Current: v127. Latest: unknown.</p>
+              <p id="updateStatusText">Current: v128. Latest: unknown.</p>
               <div class="updateBtnGrid">
                 <button class="miniBtn" id="checkUpdateBtn" type="button">Check for update</button>
                 <button class="miniBtn primaryUpdateBtn hidden" id="forceLatestBtn" type="button">Apply update</button>
@@ -3903,7 +3925,7 @@
             </div>
           </div>
           <div class="drawerFooterTools">
-            <button class="drawerVersionBadge" id="versionPillBtn" type="button" aria-label="App update and version"><strong id="versionLabel">v127</strong><span class="versionUpdateDot" aria-hidden="true"></span></button>
+            <button class="drawerVersionBadge" id="versionPillBtn" type="button" aria-label="App update and version"><strong id="versionLabel">v128</strong><span class="versionUpdateDot" aria-hidden="true"></span></button>
           </div>
         </div>
 
@@ -4223,7 +4245,7 @@
   <div class="updateBanner hidden" id="updateToast" role="status" aria-live="polite">
     <div class="updateBannerText">
       <strong>Update available</strong>
-      <span id="updateToastText">Update available: v127</span>
+      <span id="updateToastText">Update available: v128</span>
     </div>
     <div class="updateBannerActions">
       <button class="updateNowBtn" id="updateToastNow" type="button">Apply update</button>
@@ -4240,7 +4262,7 @@
     const DISPLAY_RVAL = { A: 14, K: 13, Q: 12, J: 11, '10': 10, '9': 9, '8': 8, '7': 7, '6': 6, '5': 5, '4': 4, '3': 3, '2': 2 };
     const suitOrder = ['♣', '♦', '♥', '♠'];
     const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-    const APP_VERSION = 'v127';
+    const APP_VERSION = 'v129';
     const UPDATE_CACHE_PREFIXES = ['tens-static-', 'tens-runtime-'];
     const AI_STEP_MS = 520;
     const AI_CLEAR_MS = 310;
@@ -4343,6 +4365,7 @@
       myTablePanel: document.getElementById('myTablePanel'),
       myTableGrid: document.getElementById('myTableGrid'),
       handPanel: document.getElementById('handPanel'),
+      handPointsBadge: document.getElementById('handPointsBadge'),
       handScroller: document.getElementById('handScroller'),
       handGrid: document.getElementById('handGrid'),
       handScenarioBadge: document.getElementById('handScenarioBadge'),
@@ -5956,10 +5979,12 @@
 
         await Promise.all([...cardAnimations, ...reflowAnimations]);
         revealHumanPickupPreviewCards();
+        updateVisiblePointBadge(finalHandIds);
         await new Promise(resolve => requestAnimationFrame(resolve));
       } finally {
         sprites.forEach(sprite => { if (sprite) sprite.remove(); });
         revealHumanPickupPreviewCards();
+        updateVisiblePointBadge(finalHandIds);
         // The preview remains visible until the caller mutates state and renderAll()
         // replaces it with the real hand, eliminating the delayed blank gap.
       }
@@ -6658,8 +6683,20 @@
       return wrap;
     }
 
+    function updateVisiblePointBadge(previewHandIds = null) {
+      if (!el.handPointsBadge) return;
+      const human = game.players[0];
+      const points = !human ? 0 : Array.isArray(previewHandIds)
+        ? previewHandIds.reduce((sum, id) => sum + cardPoints(id), 0)
+          + human.stacks.reduce((sum, stack) => sum + (stack.up ? cardPoints(stack.up) : 0), 0)
+        : totalVisiblePoints(game, 0);
+      el.handPointsBadge.textContent = `VISIBLE · ${points} PTS`;
+      el.handPointsBadge.setAttribute('aria-label', `Hand and face-up table: ${points} points. Face-down cards excluded.`);
+    }
+
     function renderMyTable() {
       const human = game.players[0];
+      updateVisiblePointBadge();
       el.myTableGrid.innerHTML = '';
       const humanTurn = game.roundActive && game.turn === 0;
       el.myTablePanel.classList.remove('turnGlow');
@@ -6670,6 +6707,7 @@
 
     function renderHand() {
       const human = game.players[0];
+      updateVisiblePointBadge();
       el.handGrid.innerHTML = '';
       const humanTurn = game.roundActive && game.turn === 0;
       el.handPanel.classList.remove('turnGlow');
@@ -7333,6 +7371,50 @@
       return true;
     }
 
+    // Estimate how likely the next player can supply the missing cards to clear.
+    // Use only the public pile, face-up cards, and this player's hand, never the
+    // next player's hidden card identities or anybody's face-down cards.
+    function nextPlayerClearChance(sim, playerId, rank, needed = 1) {
+      const next = sim.players[nextPlayerId(sim, playerId)];
+      const player = sim.players[playerId];
+      if (!next || !player) return 0;
+      const visibleNext = next.stacks.reduce((sum, stack) =>
+        sum + (stack.up && sim.cardsById[stack.up]?.rank === rank ? 1 : 0), 0);
+      const missing = Math.max(0, needed - visibleNext);
+      if (!missing) return 1;
+      const known = new Set(sim.pile);
+      player.hand.forEach(id => known.add(id));
+      sim.players.forEach(p => p.stacks.forEach(stack => {
+        if (stack.up) known.add(stack.up);
+      }));
+      const cardCount = Object.keys(sim.cardsById).length;
+      const deckCount = Math.max(1, Math.round(cardCount / 52));
+      let visibleOfRank = 0;
+      known.forEach(id => { if (sim.cardsById[id]?.rank === rank) visibleOfRank++; });
+      const unseenCount = Math.max(0, cardCount - known.size);
+      const unseenOfRank = Math.max(0, Math.min(unseenCount, deckCount * 4 - visibleOfRank));
+      if (!unseenCount || !unseenOfRank || !next.hand.length) return 0;
+      let zero = 1, one = 0;
+      for (let i = 0; i < Math.min(next.hand.length, unseenCount); i++) {
+        const total = unseenCount - i;
+        const newOne = one * Math.max(0, unseenCount - unseenOfRank - i + 1) / total + zero * unseenOfRank / total;
+        zero *= Math.max(0, unseenCount - unseenOfRank - i) / total;
+        one = newOne;
+      }
+      const probability = missing === 1 ? 1 - zero : missing === 2 ? 1 - zero - one : 0;
+      return Math.max(0, Math.min(1, probability));
+    }
+
+    function hasSafeNonTenPlay(sim, playerId) {
+      const player = sim.players[playerId];
+      if (!player) return false;
+      const legal = id => {
+        const rank = sim.cardsById[id]?.rank;
+        return rank && rank !== '10' && (sim.currentValue === null || RVAL[rank] <= sim.currentValue);
+      };
+      return player.hand.some(legal) || player.stacks.some(stack => stack.up && legal(stack.up));
+    }
+
     function scoreMove(sim, move, level) {
       const player = sim.players[move.playerId];
       const threat = opponentThreat(sim, move.playerId);
@@ -7410,16 +7492,37 @@
           if (pileSize >= 6) score += 34;
           if (threat.level >= 2) score += move.count > 1 ? 55 : 20;
           if (move.count > 1 && threat.level < 2 && remainingAfterVisible > 0) score -= 35 * (move.count - 1);
+          // A 10 is 30 points, but clearing a modest pile without needing to can
+          // consume the escape card too early. Preserve it only while there is a
+          // legal, non-10 alternative and nobody is close to going out. The
+          // planner can still choose it for a strong follow-up or table progress.
+          if (remainingAfterVisible > 0 && threat.level < 2 && hasSafeNonTenPlay(sim, move.playerId)) {
+            const preserve = pileSize >= 6 ? 0 : pileSize === 5 ? 65 : pileSize >= 3 ? 90 : pileSize >= 1 ? 20 : 0;
+            const difficulty = level === 'Expert' ? 1 : level === 'Hard' ? 0.7 : level === 'Medium' ? 0.35 : 0;
+            score -= preserve * difficulty * (threat.level === 1 ? 0.35 : 1);
+          }
         }
       } else {
         score += (14 - RVAL[move.rank]) * (level === 'Expert' ? 0.9 : 0.25);
         if (shouldBuildPilePressure(sim, move, threat, remainingAfterVisible)) {
           score += Math.min(28, 5 + pileSize * 2.4 + move.count * 4);
-          if (move.resultingCount === 2) score += 4;
-          if (move.resultingCount === 3) score += 13;
+          if (move.resultingCount === 2 && level !== 'Hard' && level !== 'Expert') score += 4;
+          // Three matching cards can hand the next player a one-card clear.
+          // Do not reward this setup as pile pressure on Hard/Expert.
+          if (move.resultingCount === 3 && level !== 'Hard' && level !== 'Expert') score += 13;
           if (pileSize >= 4) score += 8;
         }
         if (move.rank === 'A' || move.rank === '2') score -= blocker.urgent ? 0 : (level === 'Expert' ? 12 : 5);
+        if ((move.resultingCount === 2 || move.resultingCount === 3) && remainingAfterVisible > 0 && (level === 'Expert' || level === 'Hard')) {
+          const clearChance = nextPlayerClearChance(sim, move.playerId, move.rank, 4 - move.resultingCount);
+          const next = sim.players[nextPlayerId(sim, move.playerId)];
+          let clearCost = clearChance * (move.resultingCount === 3 ? (level === 'Expert' ? 56 : 36) : (level === 'Expert' ? 22 : 14));
+          if (remainingCount(next) <= 3) clearCost *= 1.3;
+          // Getting 30 points off the table can still justify the risk.
+          if (move.points >= 25) clearCost *= 0.7;
+          if (move.fromFaceUp >= 2) clearCost *= 0.7;
+          score -= clearCost;
+        }
       }
 
       if (move.rank === '10' && !move.willClear) score -= 999;
@@ -9456,7 +9559,7 @@
     setAiCountForNextGame(state.aiCount);
     renderDifficultyDescriptions();
     refreshSplashHome();
-    if (el.versionLabel) el.versionLabel.textContent = 'v127';
+    if (el.versionLabel) el.versionLabel.textContent = 'v128';
     setUpdateAvailable('');
     setUpdateStatus('Tap Check for update.');
     wireServiceWorkerUpdates();
