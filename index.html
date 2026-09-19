@@ -99,6 +99,18 @@
       box-shadow: 0 0 0 1px rgba(255,255,255,0.05), 0 0 42px rgba(0,0,0,0.58);
     }
 
+    /* Installed iOS PWAs: the system's top scroll-edge glass can blur the first
+       opponent labels even when their card faces (lower down) remain sharp.
+       Move the entire board's content beneath that OS-owned blur region.
+       Keep the status-bar meta and existing safe-area inset handling intact. */
+    @supports (-webkit-touch-callout: none) {
+      @media (display-mode: standalone) and (max-width: 600px) {
+        .app {
+          padding-top: calc(3px + var(--safe-top) + 30px);
+        }
+      }
+    }
+
     .panel {
       position: relative;
       min-height: 0;
@@ -3925,7 +3937,7 @@
             </div>
           </div>
           <div class="drawerFooterTools">
-            <button class="drawerVersionBadge" id="versionPillBtn" type="button" aria-label="App update and version"><strong id="versionLabel">v128</strong><span class="versionUpdateDot" aria-hidden="true"></span></button>
+            <button class="drawerVersionBadge" id="versionPillBtn" type="button" aria-label="App update and version"><strong id="versionLabel">v130</strong><span class="versionUpdateDot" aria-hidden="true"></span></button>
           </div>
         </div>
 
@@ -4262,7 +4274,7 @@
     const DISPLAY_RVAL = { A: 14, K: 13, Q: 12, J: 11, '10': 10, '9': 9, '8': 8, '7': 7, '6': 6, '5': 5, '4': 4, '3': 3, '2': 2 };
     const suitOrder = ['♣', '♦', '♥', '♠'];
     const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-    const APP_VERSION = 'v129';
+    const APP_VERSION = 'v130';
     const UPDATE_CACHE_PREFIXES = ['tens-static-', 'tens-runtime-'];
     const AI_STEP_MS = 520;
     const AI_CLEAR_MS = 310;
@@ -9559,7 +9571,7 @@
     setAiCountForNextGame(state.aiCount);
     renderDifficultyDescriptions();
     refreshSplashHome();
-    if (el.versionLabel) el.versionLabel.textContent = 'v128';
+    if (el.versionLabel) el.versionLabel.textContent = 'v130';
     setUpdateAvailable('');
     setUpdateStatus('Tap Check for update.');
     wireServiceWorkerUpdates();
