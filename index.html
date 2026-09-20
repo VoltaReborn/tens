@@ -3960,7 +3960,7 @@
             </div>
           </div>
           <div class="drawerFooterTools">
-            <button class="drawerVersionBadge" id="versionPillBtn" type="button" aria-label="App update and version"><strong id="versionLabel">v134</strong><span class="versionUpdateDot" aria-hidden="true"></span></button>
+            <button class="drawerVersionBadge" id="versionPillBtn" type="button" aria-label="App update and version"><strong id="versionLabel">v135</strong><span class="versionUpdateDot" aria-hidden="true"></span></button>
           </div>
         </div>
 
@@ -4304,7 +4304,7 @@
     const DISPLAY_RVAL = { A: 14, K: 13, Q: 12, J: 11, '10': 10, '9': 9, '8': 8, '7': 7, '6': 6, '5': 5, '4': 4, '3': 3, '2': 2 };
     const suitOrder = ['♣', '♦', '♥', '♠'];
     const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-    const APP_VERSION = 'v134';
+    const APP_VERSION = 'v135';
     const UPDATE_CACHE_PREFIXES = ['tens-static-', 'tens-runtime-'];
     const AI_STEP_MS = 520;
     const AI_CLEAR_MS = 310;
@@ -7473,11 +7473,22 @@
       return player.hand.some(legal) || player.stacks.some(stack => stack.up && legal(stack.up));
     }
 
+    // A new round begins with 19 cards per player (11 in hand, four up and
+    // four down). Count cards, not hidden card values: the latter are private.
+    // Pressure to restrict the next player grows as the round progresses.
+    function roundStrategyStage(sim) {
+      if (!sim.players.length) return { progress: 0 };
+      const averageRemaining = sim.players.reduce((sum, player) => sum + remainingCount(player), 0) / sim.players.length;
+      const progress = Math.max(0, Math.min(1, (19 - averageRemaining) / 15));
+      return { progress };
+    }
+
     function scoreMove(sim, move, level) {
       const player = sim.players[move.playerId];
       const threat = opponentThreat(sim, move.playerId);
       const blocker = endgameBlockContext(sim, move.playerId);
       const table = tablePressureProfile(player);
+      const stage = roundStrategyStage(sim);
       const pileSize = sim.pile.length;
       const activeValue = sim.currentValue ?? 14;
       const remainingAfterVisible = remainingCount(player) - (move.type === 'visible' && !move.overplay ? move.count : 0);
@@ -7501,6 +7512,11 @@
         if (table.faceUpRemaining === 0) score += level === 'Expert' ? 14 : 8;
         if (!lowRiskWindow && remainingCount(player) <= 6) score -= 16;
         if (visibleCount(player) > 0) score -= level === 'Expert' ? 3 : level === 'Hard' ? 5 : 9;
+        // A blind flip is a gamble, not a shortcut past several legal hand plays.
+        if (player.hand.length && hasSafeNonTenPlay(sim, move.playerId)) {
+          const caution = level === 'Expert' ? 8 : level === 'Hard' ? 6 : level === 'Medium' ? 4 : 2;
+          score -= Math.min(90, player.hand.length * caution) * (0.45 + 0.55 * (1 - stage.progress));
+        }
         if (level === 'Easy') score *= 0.55;
         return score;
       }
@@ -7530,6 +7546,14 @@
         }
       }
       score += move.points * (threat.level >= 2 ? 3.2 : 1.15);
+      // Face cards are easy to unload onto a fresh pile but can become stranded
+      // when the active value falls. Spend them early rather than using low
+      // cards merely to make the next player's first turn inconvenient.
+      if (move.rank === 'J' || move.rank === 'Q' || move.rank === 'K') {
+        const freshPileOpportunity = sim.currentValue === null ? 1 : 0.45;
+        const unloadingWeight = level === 'Expert' ? 10 : level === 'Hard' ? 8 : level === 'Medium' ? 4 : 2;
+        score += move.count * unloadingWeight * (1 - stage.progress) * freshPileOpportunity;
+      }
       score += (move.count - 1) * (move.rank === 'A' || move.rank === '2' || move.rank === '10' ? -5 : 7);
 
       const tablePriority = (level === 'Expert' || level === 'Hard');
@@ -7545,25 +7569,30 @@
         if (move.fromFaceUp || move.exposesDown) score += 12;
         if (move.rank === '10') {
           if (pileSize === 0 && threat.level < 2 && remainingAfterVisible > 0) score -= 84;
-          const tinyLowPile = pileSize > 0 && pileSize <= 2 && activeValue <= 2 && threat.level < 2 && remainingAfterVisible > 0;
+          const tinyLowPile = pileSize > 0 && pileSize <= 2 && activeValue <= 2 && threat.level < 2 && remainingAfterVisible > 0 && hasSafeNonTenPlay(sim, move.playerId);
           if (tinyLowPile) score -= level === 'Expert' ? 165 : level === 'Hard' ? 125 : level === 'Medium' ? 74 : 34;
           if (pileSize >= 6) score += 34;
           if (threat.level >= 2) score += move.count > 1 ? 55 : 20;
           if (move.count > 1 && threat.level < 2 && remainingAfterVisible > 0) score -= 35 * (move.count - 1);
-          // A 10 is 30 points, but clearing a modest pile without needing to can
-          // consume the escape card too early. Preserve it only while there is a
-          // legal, non-10 alternative and nobody is close to going out. The
-          // planner can still choose it for a strong follow-up or table progress.
+          // A 10 remains a valuable escape card. A speculative follow-up after
+          // clearing one or two cards is NOT worth burning it while legal plays
+          // remain and opponents still hold multiple cards. Penalize this on the
+          // entire candidate line: planTurn sums follow-up rewards afterwards.
+          // Do not penalize a finish, a forced 10, or a genuinely urgent defense.
           if (remainingAfterVisible > 0 && threat.level < 2 && hasSafeNonTenPlay(sim, move.playerId)) {
-            const preserve = pileSize >= 6 ? 0 : pileSize === 5 ? 65 : pileSize >= 3 ? 90 : pileSize >= 1 ? 20 : 0;
-            const difficulty = level === 'Expert' ? 1 : level === 'Hard' ? 0.7 : level === 'Medium' ? 0.35 : 0;
-            score -= preserve * difficulty * (threat.level === 1 ? 0.35 : 1);
+            const preserve = pileSize === 0 ? 200 : pileSize <= 2 ? 240 : pileSize <= 4 ? 150 : pileSize === 5 ? 75 : 0;
+            const difficulty = level === 'Expert' ? 1 : level === 'Hard' ? 0.8 : level === 'Medium' ? 0.4 : 0;
+            // Five cards left is worth watching, but is not one card from out.
+            score -= preserve * difficulty * (threat.level === 1 ? 0.82 : 1);
           }
         }
       } else {
-        score += (14 - RVAL[move.rank]) * (level === 'Expert' ? 0.9 : 0.25);
+        // Low active values are useful when opponents are nearing their last
+        // cards, not as a reason to pass up a strong opening face-card unload.
+        const controlWeight = 0.2 + 0.8 * stage.progress;
+        score += (14 - RVAL[move.rank]) * (level === 'Expert' ? 0.9 : 0.25) * controlWeight;
         if (shouldBuildPilePressure(sim, move, threat, remainingAfterVisible)) {
-          score += Math.min(28, 5 + pileSize * 2.4 + move.count * 4);
+          score += Math.min(28, 5 + pileSize * 2.4 + move.count * 4) * controlWeight;
           if (move.resultingCount === 2 && level !== 'Hard' && level !== 'Expert') score += 4;
           // Three matching cards can hand the next player a one-card clear.
           // Do not reward this setup as pile pressure on Hard/Expert.
@@ -9691,7 +9720,7 @@
     setAiCountForNextGame(state.aiCount);
     renderDifficultyDescriptions();
     refreshSplashHome();
-    if (el.versionLabel) el.versionLabel.textContent = 'v134';
+    if (el.versionLabel) el.versionLabel.textContent = 'v135';
     setUpdateAvailable('');
     setUpdateStatus('Tap Check for update.');
     wireServiceWorkerUpdates();
