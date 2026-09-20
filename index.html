@@ -285,6 +285,20 @@
       color: var(--red-suit);
     }
 
+    /* Expert's first recommended move: mint border distinct from gold selection and cyan queue. */
+    .handGrid .card.expertSuggested::after,
+    .myTableGrid .card.expertSuggested::after,
+    .myTableGrid .backCard.expertSuggested::after {
+      content: "";
+      position: absolute;
+      inset: 2px;
+      z-index: 8;
+      border: 3px solid #56f6b9;
+      border-radius: inherit;
+      box-shadow: inset 0 0 0 1px rgba(3, 39, 26, 0.65), 0 0 9px rgba(53, 245, 173, 0.62);
+      pointer-events: none;
+    }
+
     .card.selected {
       outline: 2px solid var(--gold);
       outline-offset: -2px;
@@ -922,7 +936,7 @@
     .drawerTab {
       position: absolute;
       left: -21px;
-      top: calc(61.5dvh - 31px);
+      top: var(--drawer-tab-top, calc(61.5dvh - 31px));
       width: 21px;
       height: 62px;
       border: 1px solid rgba(255,255,255,0.22);
@@ -3946,7 +3960,7 @@
             </div>
           </div>
           <div class="drawerFooterTools">
-            <button class="drawerVersionBadge" id="versionPillBtn" type="button" aria-label="App update and version"><strong id="versionLabel">v133</strong><span class="versionUpdateDot" aria-hidden="true"></span></button>
+            <button class="drawerVersionBadge" id="versionPillBtn" type="button" aria-label="App update and version"><strong id="versionLabel">v134</strong><span class="versionUpdateDot" aria-hidden="true"></span></button>
           </div>
         </div>
 
@@ -3955,6 +3969,13 @@
           <div class="sectionBox">
             <h3>Suggested play</h3>
             <p id="hintCopy">Hints use the Expert planner on a cloned board state. They explain the recommendation without making a play.</p>
+            <div class="controlRow expertHintToggleRow">
+              <div>
+                <div class="controlLabel">Show Expert's move on cards</div>
+                <p class="smallHelp">During your turn, outline exactly which cards Expert would play next. Highlights do not play cards for you.</p>
+              </div>
+              <button class="toggle" data-toggle="liveExpertHint" type="button" role="switch" aria-checked="false" aria-label="Show Expert's recommended move on cards"></button>
+            </div>
             <button class="trainerBtn primary" id="getHintBtn">Get Expert Hint</button>
             <div class="hintOutput" id="selectedCardOutput">No hint requested yet.</div>
           </div>
@@ -4283,7 +4304,7 @@
     const DISPLAY_RVAL = { A: 14, K: 13, Q: 12, J: 11, '10': 10, '9': 9, '8': 8, '7': 7, '6': 6, '5': 5, '4': 4, '3': 3, '2': 2 };
     const suitOrder = ['♣', '♦', '♥', '♠'];
     const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-    const APP_VERSION = 'v133';
+    const APP_VERSION = 'v134';
     const UPDATE_CACHE_PREFIXES = ['tens-static-', 'tens-runtime-'];
     const AI_STEP_MS = 520;
     const AI_CLEAR_MS = 310;
@@ -4315,7 +4336,8 @@
         pileInlineLog: false,
         pileInlineScores: true,
         showSuits: true,
-        showHint: true
+        showHint: true,
+        liveExpertHint: false
       }
     };
 
@@ -4582,6 +4604,7 @@
         if (typeof saved.pileInlineLog === 'boolean') state.toggles.pileInlineLog = saved.pileInlineLog;
         if (typeof saved.showSuits === 'boolean') state.toggles.showSuits = saved.showSuits;
         if (typeof saved.showHint === 'boolean') state.toggles.showHint = saved.showHint;
+        if (typeof saved.liveExpertHint === 'boolean') state.toggles.liveExpertHint = saved.liveExpertHint;
         if (saved.clearAnimation && el.clearAnimation) el.clearAnimation.value = saved.clearAnimation;
         if (saved.face) setFace(saved.face);
         if (saved.customCardBack) setCustomCardBack(saved.customCardBack);
@@ -4615,6 +4638,7 @@
           pileInlineScores: !!state.toggles.pileInlineScores,
           showSuits: !!state.toggles.showSuits,
           showHint: !!state.toggles.showHint,
+          liveExpertHint: !!state.toggles.liveExpertHint,
           clearAnimation: el.clearAnimation ? el.clearAnimation.value : 'Explode',
           face: state.appearance.face,
           cardBack: state.appearance.cardBack,
@@ -4762,6 +4786,7 @@
         const key = btn.dataset.toggle;
         if (key && Object.prototype.hasOwnProperty.call(state.toggles, key)) {
           btn.classList.toggle('on', !!state.toggles[key]);
+          if (key === 'liveExpertHint') btn.setAttribute('aria-checked', String(!!state.toggles[key]));
         }
       });
       document.body.classList.toggle('hide-suits', !state.toggles.showSuits);
@@ -7058,6 +7083,7 @@
       renderHand();
       renderDifficultyDescriptions();
       renderTrainerReport(false);
+      refreshExpertCardSuggestion();
       updateStatusText(game.roundActive ? 'Game active.' : 'No active round.');
       requestAnimationFrame(() => {
         layoutAll();
@@ -7174,7 +7200,17 @@
       applyHandLayoutForCount(count);
     }
 
+    function alignDrawerTabToMyTable() {
+      if (!el.myTablePanel || !el.drawer || !el.drawerTab) return;
+      const table = el.myTablePanel.getBoundingClientRect();
+      const drawer = el.drawer.getBoundingClientRect();
+      if (!table.height || !drawer.height) return;
+      const tabHeight = el.drawerTab.offsetHeight || 62;
+      el.drawer.style.setProperty('--drawer-tab-top', `${Math.round(table.top + table.height / 2 - drawer.top - tabHeight / 2)}px`);
+    }
+
     function layoutAll() {
+      alignDrawerTabToMyTable();
       layoutOpponents();
       layoutPile();
       layoutMyTable();
@@ -8715,13 +8751,86 @@
       if (force) animateTrainerCardsIn();
     }
 
+    let expertHintCacheKey = null;
+    let expertHintCachePlan = null;
+    let expertHintRefreshTimer = null;
+    let expertHintGeneration = 0;
+
+    function expertHintBoardKey() {
+      // Include card identities, pile, visible stacks and scores: a clear or pickup may
+      // change the Expert planner without changing the hand's card count.
+      return JSON.stringify([
+        game.roundNumber, game.moveNumber, game.turn, game.roundActive,
+        game.currentValue, game.currentCount, game.pile,
+        game.players.map(p => [p.id, p.score, p.hand, p.stacks])
+      ]);
+    }
+
+    function expertPlanForCurrentBoard() {
+      if (!game.roundActive || game.turn !== 0) return null;
+      const key = expertHintBoardKey();
+      if (key !== expertHintCacheKey) {
+        expertHintCachePlan = planTurn(cloneSim(), 0, 'Expert', 8);
+        expertHintCacheKey = key;
+      }
+      return expertHintCachePlan;
+    }
+
+    function clearExpertCardSuggestion() {
+      document.querySelectorAll('.expertSuggested').forEach(card => card.classList.remove('expertSuggested'));
+    }
+
+    function markExpertCardSuggestion(first) {
+      clearExpertCardSuggestion();
+      if (!first || !state.toggles.liveExpertHint || !game.roundActive || game.turn !== 0 || game.uiLock) return;
+      if (first.type === 'blind') {
+        // Blind flips are identified by the recommended stack, never by the hidden card ID.
+        const stack = el.myTableGrid?.querySelectorAll('.stack')[first.stackIndex];
+        stack?.querySelector('.backCard[data-face="down"]')?.classList.add('expertSuggested');
+        return;
+      }
+      if (first.type !== 'visible') return;
+      const ids = new Set(first.cardIds || []);
+      // Scope to the human's own two areas; do not highlight matching AI or pile cards.
+      [el.handGrid, el.myTableGrid].forEach(area => {
+        area?.querySelectorAll('.card[data-card-id]').forEach(card => {
+          if (ids.has(card.dataset.cardId)) card.classList.add('expertSuggested');
+        });
+      });
+    }
+
+    function refreshExpertCardSuggestion() {
+      clearTimeout(expertHintRefreshTimer);
+      expertHintRefreshTimer = null;
+      const generation = ++expertHintGeneration;
+      clearExpertCardSuggestion();
+      if (!state.toggles.liveExpertHint || !game.roundActive || game.turn !== 0 || game.uiLock) return;
+      const boardKey = expertHintBoardKey();
+      if (expertHintCacheKey === boardKey && expertHintCachePlan) {
+        markExpertCardSuggestion(expertHintCachePlan.sequence?.[0]);
+        return;
+      }
+      // Yield a frame to card rendering and motion before running the existing Expert planner.
+      expertHintRefreshTimer = setTimeout(() => {
+        expertHintRefreshTimer = null;
+        if (generation !== expertHintGeneration || !state.toggles.liveExpertHint ||
+            !game.roundActive || game.turn !== 0 || game.uiLock || expertHintBoardKey() !== boardKey) return;
+        try {
+          const plan = expertPlanForCurrentBoard();
+          if (generation === expertHintGeneration) markExpertCardSuggestion(plan?.sequence?.[0]);
+        } catch (err) {
+          console.warn('Expert suggestion unavailable:', err);
+        }
+      }, 70);
+    }
+
     function showHint() {
       if (!game.roundActive || game.turn !== 0) {
         el.selectedCardOutput.innerHTML = 'Hints are available during your turn.';
         return;
       }
-      const plan = planTurn(cloneSim(), 0, 'Expert', 8);
-      if (!plan.sequence.length) {
+      const plan = expertPlanForCurrentBoard();
+      if (!plan?.sequence.length) {
         el.selectedCardOutput.innerHTML = 'No available play found.';
         return;
       }
@@ -9498,6 +9607,7 @@
           const key = btn.dataset.toggle;
           state.toggles[key] = !state.toggles[key];
           btn.classList.toggle('on', state.toggles[key]);
+          if (key === 'liveExpertHint') btn.setAttribute('aria-checked', String(!!state.toggles[key]));
           if (key === 'showSuits') document.body.classList.toggle('hide-suits', !state.toggles[key]);
           if (key === 'showHint') {
             const hintCopy = document.getElementById('hintCopy');
@@ -9507,7 +9617,7 @@
             state.toggles.centerLivePile = true;
             btn.classList.add('on');
           }
-          if (['animations', 'multiCardFanIn', 'overplayCountSteps', 'showSuits', 'showHint', 'centerLivePile'].includes(key)) savePrefs();
+          if (['animations', 'multiCardFanIn', 'overplayCountSteps', 'showSuits', 'showHint', 'liveExpertHint', 'centerLivePile'].includes(key)) savePrefs();
           renderAll();
         });
       });
@@ -9581,7 +9691,7 @@
     setAiCountForNextGame(state.aiCount);
     renderDifficultyDescriptions();
     refreshSplashHome();
-    if (el.versionLabel) el.versionLabel.textContent = 'v133';
+    if (el.versionLabel) el.versionLabel.textContent = 'v134';
     setUpdateAvailable('');
     setUpdateStatus('Tap Check for update.');
     wireServiceWorkerUpdates();
